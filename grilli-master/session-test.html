@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Session Test - Grilli</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 40px; 
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .status { 
+            padding: 20px; 
+            margin: 20px 0; 
+            border-radius: 16px; 
+            border: 2px solid rgba(255, 215, 0, 0.3);
+        }
+        .logged-in { 
+            background: rgba(76, 175, 80, 0.1); 
+            border-color: #4CAF50; 
+        }
+        .logged-out { 
+            background: rgba(244, 67, 54, 0.1); 
+            border-color: #f44336; 
+        }
+        .info { 
+            background: rgba(33, 150, 243, 0.1); 
+            border-color: #2196F3; 
+        }
+        button { 
+            padding: 12px 24px; 
+            margin: 10px; 
+            cursor: pointer; 
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            border: none;
+            border-radius: 20px;
+            color: #1a1a1a;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.3);
+        }
+        .test-section {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 16px;
+            margin: 20px 0;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .test-title {
+            color: #ffd700;
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+        }
+        .test-result {
+            padding: 10px;
+            border-radius: 16px;
+            margin: 10px 0;
+            font-family: monospace;
+        }
+        .test-success { background: rgba(76, 175, 80, 0.2); border-left: 4px solid #4CAF50; }
+        .test-error { background: rgba(244, 67, 54, 0.2); border-left: 4px solid #f44336; }
+        .test-info { background: rgba(33, 150, 243, 0.2); border-left: 4px solid #2196F3; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Session Management Test & Debug</h1>
+    
+    <div id="statusDiv" class="status">
+        <h3>Current Status:</h3>
+        <div id="statusContent"></div>
+    </div>
+    
+    <div class="test-section">
+        <div class="test-title">🧪 Test Instructions:</div>
+        <ol>
+            <li>Go to the main page and log in</li>
+            <li>Come back to this page - you should still be logged in</li>
+            <li>Navigate to menu items and orders - you should stay logged in</li>
+            <li>Only logout when you click the logout button</li>
+            <li>Test navigation between pages without losing login state</li>
+        </ol>
+    </div>
+    
+    <div class="test-section">
+        <div class="test-title">🎯 Quick Actions:</div>
+        <button onclick="checkStatus()">Check Current Status</button>
+        <button onclick="clearSession()">Clear Session (Logout)</button>
+        <button onclick="goToMain()">Go to Main Page</button>
+        <button onclick="goToMenu()">Go to Menu Item</button>
+        <button onclick="goToOrders()">Go to Orders</button>
+        <button onclick="runAllTests()">Run All Tests</button>
+    </div>
+    
+    <div class="test-section">
+        <div class="test-title">🔍 Test Results:</div>
+        <div id="testResults"></div>
+    </div>
+    
+    <div class="test-section">
+        <div class="test-title">📊 Debug Information:</div>
+        <pre id="debugContent"></pre>
+    </div>
+
+    <script>
+        let testResults = [];
+        
+        function addTestResult(testName, success, message, details = null) {
+            const result = {
+                name: testName,
+                success: success,
+                message: message,
+                details: details,
+                timestamp: new Date().toISOString()
+            };
+            testResults.push(result);
+            displayTestResults();
+        }
+        
+        function displayTestResults() {
+            const container = document.getElementById('testResults');
+            container.innerHTML = testResults.map(result => `
+                <div class="test-result ${result.success ? 'test-success' : 'test-error'}">
+                    <strong>${result.success ? '✅' : '❌'} ${result.name}:</strong> ${result.message}
+                    ${result.details ? `<br><small>${result.details}</small>` : ''}
+                </div>
+            `).join('');
+        }
+        
+        function checkStatus() {
+            const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+            const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+            
+            const statusDiv = document.getElementById('statusDiv');
+            const statusContent = document.getElementById('statusContent');
+            
+            if (isLoggedIn && currentUser) {
+                statusDiv.className = 'status logged-in';
+                statusContent.innerHTML = `
+                    <p><strong>✅ LOGGED IN</strong></p>
+                    <p><strong>User:</strong> ${currentUser.name || 'Unknown'}</p>
+                    <p><strong>Email:</strong> ${currentUser.email}</p>
+                    <p><strong>Phone:</strong> ${currentUser.phone}</p>
+                    <p><strong>Session ID:</strong> ${localStorage.getItem('isLoggedIn')}</p>
+                `;
+                addTestResult('Status Check', true, 'User is logged in', `User: ${currentUser.name}`);
+            } else {
+                statusDiv.className = 'status logged-out';
+                statusContent.innerHTML = `
+                    <p><strong>❌ NOT LOGGED IN</strong></p>
+                    <p>No active session found.</p>
+                `;
+                addTestResult('Status Check', false, 'User is not logged in');
+            }
+            
+            updateDebugInfo();
+        }
+        
+        function clearSession() {
+            localStorage.removeItem('currentUser');
+            localStorage.removeItem('isLoggedIn');
+            alert('Session cleared! You are now logged out.');
+            addTestResult('Session Clear', true, 'Session successfully cleared');
+            checkStatus();
+        }
+        
+        function goToMain() {
+            addTestResult('Navigation Test', true, 'Navigating to main page');
+            window.location.href = './index.html';
+        }
+        
+        function goToMenu() {
+            addTestResult('Navigation Test', true, 'Navigating to menu item');
+            window.location.href = './menu-item.html?id=greek-salad';
+        }
+        
+        function goToOrders() {
+            addTestResult('Navigation Test', true, 'Navigating to orders page');
+            window.location.href = './orders.html';
+        }
+        
+        function runAllTests() {
+            testResults = [];
+            
+            // Test 1: Check localStorage
+            try {
+                const isLoggedIn = localStorage.getItem('isLoggedIn');
+                const currentUser = localStorage.getItem('currentUser');
+                addTestResult('localStorage Access', true, 'localStorage is accessible', 
+                    `isLoggedIn: ${isLoggedIn}, currentUser: ${currentUser ? 'Present' : 'None'}`);
+            } catch (error) {
+                addTestResult('localStorage Access', false, 'localStorage error', error.message);
+            }
+            
+            // Test 2: Check session data
+            const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+            const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+            
+            if (isLoggedIn && currentUser) {
+                addTestResult('Session Data', true, 'Valid session data found', 
+                    `User: ${currentUser.name}, Email: ${currentUser.email}`);
+            } else {
+                addTestResult('Session Data', false, 'No valid session data');
+            }
+            
+            // Test 3: Check orders data
+            try {
+                const orders = JSON.parse(localStorage.getItem('grilliOrders') || '[]');
+                addTestResult('Orders Data', true, `Orders found: ${orders.length}`, 
+                    orders.length > 0 ? `Latest order: ${orders[0]?.item?.name}` : 'No orders');
+            } catch (error) {
+                addTestResult('Orders Data', false, 'Error reading orders', error.message);
+            }
+            
+            // Test 4: Check customer details
+            try {
+                const customerDetails = JSON.parse(localStorage.getItem('grilliCustomerDetails') || 'null');
+                addTestResult('Customer Details', true, 
+                    customerDetails ? 'Customer details found' : 'No customer details', 
+                    customerDetails ? `Name: ${customerDetails.name}` : 'None');
+            } catch (error) {
+                addTestResult('Customer Details', false, 'Error reading customer details', error.message);
+            }
+            
+            // Test 5: Navigation simulation
+            addTestResult('Navigation Test', true, 'Navigation functions available');
+            
+            // Test 6: Browser compatibility
+            const hasLocalStorage = typeof(Storage) !== "undefined";
+            addTestResult('Browser Compatibility', hasLocalStorage, 
+                hasLocalStorage ? 'localStorage supported' : 'localStorage not supported');
+        }
+        
+        function updateDebugInfo() {
+            const debugContent = document.getElementById('debugContent');
+            const debugInfo = {
+                'isLoggedIn': localStorage.getItem('isLoggedIn'),
+                'currentUser': localStorage.getItem('currentUser'),
+                'grilliOrders': localStorage.getItem('grilliOrders'),
+                'grilliCustomerDetails': localStorage.getItem('grilliCustomerDetails'),
+                'timestamp': new Date().toISOString(),
+                'userAgent': navigator.userAgent,
+                'localStorage': typeof(Storage) !== "undefined" ? 'Supported' : 'Not Supported'
+            };
+            
+            debugContent.textContent = JSON.stringify(debugInfo, null, 2);
+        }
+        
+        // Check status when page loads
+        window.addEventListener('load', () => {
+            checkStatus();
+            runAllTests();
+        });
+        
+        // Check status every 10 seconds to monitor changes
+        setInterval(checkStatus, 10000);
+        
+        // Monitor localStorage changes
+        window.addEventListener('storage', (e) => {
+            addTestResult('Storage Change', true, `Storage changed: ${e.key}`, 
+                `Old: ${e.oldValue}, New: ${e.newValue}`);
+            checkStatus();
+        });
+    </script>
+</body>
+</html>

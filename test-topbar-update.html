@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Topbar Update - Grilli Restaurant</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #1a1a1a;
+            color: white;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ffd700;
+            border-radius: 10px;
+        }
+        .test-button {
+            background: #ffd700;
+            color: #1a1a1a;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #ffed4e;
+        }
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .success {
+            background: rgba(0, 255, 0, 0.2);
+            border: 1px solid #00ff00;
+        }
+        .info {
+            background: rgba(0, 150, 255, 0.2);
+            border: 1px solid #0096ff;
+        }
+        .error {
+            background: rgba(255, 0, 0, 0.2);
+            border: 1px solid #ff0000;
+        }
+        .demo-user {
+            background: rgba(255, 215, 0, 0.1);
+            border: 1px solid #ffd700;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .demo-user h3 {
+            color: #ffd700;
+            margin-top: 0;
+        }
+        .demo-user p {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Topbar Contact Update - Grilli Restaurant</h1>
+    
+    <div class="test-section">
+        <h2>🎯 What This Test Does</h2>
+        <p>This test verifies that when a user logs in, the topbar contact information updates dynamically:</p>
+        <ul>
+            <li><strong>Blue Box (Phone):</strong> Should update to show the logged-in user's phone number</li>
+            <li><strong>Green Box (Email):</strong> Should update to show the logged-in user's email</li>
+            <li><strong>Clickable Links:</strong> Phone and email should become clickable with user's actual contact info</li>
+        </ul>
+    </div>
+    
+    <div class="test-section">
+        <h2>🧪 Test Steps</h2>
+        <p>Follow these steps to test the functionality:</p>
+        <ol>
+            <li><strong>Open Main Page:</strong> Click the button below to open the main Grilli Restaurant page</li>
+            <li><strong>Check Default Values:</strong> Verify that phone shows "+91 9510261149" and email shows "raxitsanghani@gmail.com"</li>
+            <li><strong>Login:</strong> Click the Login button and use one of the demo accounts below</li>
+            <li><strong>Verify Update:</strong> Check that the phone and email in the topbar now show the user's actual information</li>
+            <li><strong>Test Clickable Links:</strong> Click on the phone/email to verify they link to the user's actual contact info</li>
+            <li><strong>Logout:</strong> Click logout and verify the contact info returns to default values</li>
+        </ol>
+    </div>
+    
+    <div class="test-section">
+        <h2>👤 Demo User Accounts</h2>
+        <p>Use these accounts to test the login functionality:</p>
+        
+        <div class="demo-user">
+            <h3>Demo User 1</h3>
+            <p><strong>Email:</strong> demo1@example.com</p>
+            <p><strong>Phone:</strong> +91 9876543210</p>
+            <p><strong>Password:</strong> password123</p>
+        </div>
+        
+        <div class="demo-user">
+            <h3>Demo User 2</h3>
+            <p><strong>Email:</strong> demo2@example.com</p>
+            <p><strong>Phone:</strong> +91 8765432109</p>
+            <p><strong>Password:</strong> password123</p>
+        </div>
+        
+        <div class="demo-user">
+            <h3>Create New Account</h3>
+            <p>You can also create a new account with your own details to see the contact info update in real-time.</p>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🚀 Start Testing</h2>
+        <p>Click the button below to open the main page and begin testing:</p>
+        <button class="test-button" onclick="openMainPage()">Open Main Grilli Restaurant Page</button>
+        <div id="testStatus"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>✅ Expected Results</h2>
+        <p>After successful login, you should see:</p>
+        <ul>
+            <li><strong>Phone Number (Blue Box):</strong> Changes from "+91 9510261149" to user's actual phone</li>
+            <li><strong>Email (Green Box):</strong> Changes from "raxitsanghani@gmail.com" to user's actual email</li>
+            <li><strong>Visual Enhancement:</strong> Contact info gets golden color and bold text</li>
+            <li><strong>Functional Links:</strong> Clicking phone/email opens user's actual contact info</li>
+            <li><strong>Logout Reset:</strong> Contact info returns to default restaurant values</li>
+        </ul>
+    </div>
+    
+    <div class="test-section">
+        <h2>🔧 Technical Details</h2>
+        <p><strong>Files Modified:</strong></p>
+        <ul>
+            <li><code>grilli-master/index.html</code> - Added IDs to phone and email elements</li>
+            <li><code>grilli-master/assets/js/login.js</code> - Added contact info update logic</li>
+            <li><code>grilli-master/assets/css/style.css</code> - Added user-specific styling</li>
+        </ul>
+        <p><strong>How It Works:</strong></p>
+        <ol>
+            <li>User logs in → <code>updateTopbarContactInfo()</code> is called</li>
+            <li>Phone and email elements are updated with user's actual contact info</li>
+            <li>Href attributes are updated for clickable functionality</li>
+            <li>Visual styling is applied to show user-specific information</li>
+            <li>On logout → <code>resetTopbarContactInfo()</code> restores default values</li>
+        </ol>
+    </div>
+
+    <script>
+        function openMainPage() {
+            const status = document.getElementById('testStatus');
+            try {
+                // Open main page in new tab
+                const newTab = window.open('http://localhost:4000', '_blank');
+                if (newTab) {
+                    status.innerHTML = '<div class="status success">✅ Main page opened successfully! Now follow the test steps above.</div>';
+                } else {
+                    status.innerHTML = '<div class="status error">❌ Failed to open main page. Please check if the server is running.</div>';
+                }
+            } catch (error) {
+                status.innerHTML = '<div class="status error">❌ Error opening main page: ' + error.message + '</div>';
+            }
+        }
+        
+        // Auto-check if server is running
+        window.onload = function() {
+            fetch('http://localhost:4000/api/health')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Server is running:', data);
+                })
+                .catch(error => {
+                    console.error('Server not accessible:', error);
+                    document.getElementById('testStatus').innerHTML = 
+                        '<div class="status error">⚠️ Server not accessible. Please make sure the server is running on port 4000.</div>';
+                });
+        };
+    </script>
+</body>
+</html>

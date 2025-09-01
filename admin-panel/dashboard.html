@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grilli - Admin Dashboard</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Forum&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --gold-crayola: hsl(38, 61%, 73%);
+            --quick-silver: hsla(0, 0%, 65%, 1);
+            --davys-grey: hsla(30, 3%, 34%, 1);
+            --smoky-black-1: hsla(40, 12%, 5%, 1);
+            --smoky-black-2: hsla(30, 8%, 5%, 1);
+            --smoky-black-3: hsla(0, 3%, 7%, 1);
+            --eerie-black-1: hsla(210, 4%, 9%, 1);
+            --eerie-black-2: hsla(210, 4%, 11%, 1);
+            --eerie-black-3: hsla(180, 2%, 8%, 1);
+            --eerie-black-4: hsla(0, 0%, 13%, 1);
+            --white: hsla(0, 0%, 100%, 1);
+            --white-alpha-20: hsla(0, 0%, 100%, 0.2);
+            --white-alpha-10: hsla(0, 0%, 100%, 0.1);
+            --black: hsla(0, 0%, 0%, 1);
+            --black-alpha-80: hsla(0, 0%, 0%, 0.8);
+            --black-alpha-15: hsla(0, 0%, 0%, 0.15);
+            --gradient-1: linear-gradient(to top,hsla(0, 0%, 0%, 0.9),hsla(0, 0%, 0%, 0.7),transparent);
+            --fontFamily-forum: 'Forum', cursive;
+            --fontFamily-dm_sans: 'DM Sans', sans-serif;
+            --fontSize-display-1: calc(1.3rem + 6.7vw);
+            --fontSize-headline-1: calc(2rem + 2.5vw);
+            --fontSize-headline-2: calc(1.3rem + 2.4vw);
+            --fontSize-title-1: calc(1.6rem + 1.2vw);
+            --fontSize-title-2: 2.2rem;
+            --fontSize-title-3: 2.1rem;
+            --fontSize-title-4: calc(1.6rem + 1.2vw);
+            --fontSize-body-1: 2.4rem;
+            --fontSize-body-2: 1.6rem;
+            --fontSize-body-3: 1.8rem;
+            --fontSize-body-4: 1.6rem;
+            --fontSize-label-1: 1.4rem;
+            --fontSize-label-2: 1.2rem;
+            --weight-regular: 400;
+            --weight-bold: 700;
+            --lineHeight-1: 1em;
+            --lineHeight-2: 1.2em;
+            --lineHeight-3: 1.5em;
+            --lineHeight-4: 1.6em;
+            --lineHeight-5: 1.85em;
+            --lineHeight-6: 1.4em;
+            --letterSpacing-1: 0.15em;
+            --letterSpacing-2: 0.4em;
+            --letterSpacing-3: 0.2em;
+            --letterSpacing-4: 0.3em;
+            --letterSpacing-5: 3px;
+            --section-space: 70px;
+            --shadow-1: 0px 0px 25px 0px hsla(0, 0%, 0%, 0.25);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--fontFamily-dm_sans);
+            background: linear-gradient(135deg, var(--smoky-black-1) 0%, var(--eerie-black-1) 100%);
+            min-height: 100vh;
+            color: var(--white);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Admin Panel */
+        .admin-panel {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .admin-header {
+            background: linear-gradient(135deg, var(--smoky-black-1) 0%, var(--eerie-black-1) 100%);
+            border-bottom: 2px solid var(--gold-crayola);
+            padding: 1rem 0;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo-section img {
+            filter: brightness(0) saturate(100%) invert(83%) sepia(31%) saturate(638%) hue-rotate(359deg) brightness(103%) contrast(107%);
+        }
+
+        .admin-info {
+            color: var(--gold-crayola);
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .logout-btn {
+            background: transparent;
+            color: var(--gold-crayola);
+            border: 2px solid var(--gold-crayola);
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .logout-btn:hover {
+            background: var(--gold-crayola);
+            color: var(--smoky-black-1);
+        }
+
+        .admin-main {
+            flex: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            width: 100%;
+        }
+
+        /* Dashboard */
+        .dashboard-content {
+            display: block;
+        }
+
+        .dashboard-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .dashboard-header h1 {
+            color: var(--gold-crayola);
+            font-family: var(--fontFamily-forum);
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .dashboard-header p {
+            color: var(--quick-silver);
+            font-size: 1.2rem;
+        }
+
+        .dashboard-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--eerie-black-2) 0%, var(--smoky-black-1) 100%);
+            padding: 2rem;
+            border-radius: 20px;
+            text-align: center;
+            border: 2px solid var(--eerie-black-3);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            border-color: var(--gold-crayola);
+            transform: translateY(-5px);
+        }
+
+        .stat-card h3 {
+            color: var(--quick-silver);
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-card p {
+            color: var(--gold-crayola);
+            font-size: 2.5rem;
+            font-weight: bold;
+            font-family: var(--fontFamily-forum);
+        }
+
+        .dashboard-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .action-card {
+            background: linear-gradient(135deg, var(--eerie-black-2) 0%, var(--smoky-black-1) 100%);
+            padding: 2.5rem;
+            border-radius: 25px;
+            text-align: center;
+            border: 2px solid var(--eerie-black-3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .action-card:hover {
+            border-color: var(--gold-crayola);
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(255, 215, 0, 0.1);
+        }
+
+        .action-icon {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .action-card h3 {
+            color: var(--gold-crayola);
+            font-family: var(--fontFamily-forum);
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+        }
+
+        .action-card p {
+            color: var(--quick-silver);
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+
+        /* Page Content */
+        .page-content {
+            display: none;
+        }
+
+        .page-content.active {
+            display: block;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .page-header h2 {
+            color: var(--gold-crayola);
+            font-family: var(--fontFamily-forum);
+            font-size: 2.5rem;
+        }
+
+        .back-btn {
+            background: transparent;
+            color: var(--gold-crayola);
+            border: 2px solid var(--gold-crayola);
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .back-btn:hover {
+            background: var(--gold-crayola);
+            color: var(--smoky-black-1);
+        }
+
+        .primary-btn {
+            background: var(--gold-crayola);
+            color: var(--smoky-black-1);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .primary-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(255, 215, 0, 0.3);
+        }
+
+        /* Menu Management */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 2rem;
+        }
+
+        .menu-item-card {
+            background: linear-gradient(135deg, var(--eerie-black-2) 0%, var(--smoky-black-1) 100%);
+            border-radius: 20px;
+            overflow: hidden;
+            border: 2px solid var(--eerie-black-3);
+            transition: all 0.3s ease;
+        }
+
+        .menu-item-card:hover {
+            border-color: var(--gold-crayola);
+            transform: translateY(-5px);
+        }
+
+        .item-image {
+            height: 200px;
+            overflow: hidden;
+        }
+
+        .item-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .menu-item-card:hover .item-image img {
+            transform: scale(1.05);
+        }
+
+        .item-details {
+            padding: 1.5rem;
+        }
+
+        .item-details h3 {
+            color: var(--gold-crayola);
+            font-family: var(--fontFamily-forum);
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .item-type {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .item-type.veg {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4CAF50;
+            border: 1px solid #4CAF50;
+        }
+
+        .item-type.non-veg {
+            background: rgba(244, 67, 54, 0.2);
+            color: #F44336;
+            border: 1px solid #F44336;
+        }
+
+        .item-price {
+            color: var(--gold-crayola);
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .item-delivery, .item-prep {
+            color: var(--quick-silver);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .item-badge {
+            display: inline-block;
+            background: var(--gold-crayola);
+            color: var(--smoky-black-1);
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
+        }
+
+        .item-actions {
+            padding: 1rem 1.5rem;
+            display: flex;
+            gap: 1rem;
+        }
+
+        .edit-btn, .delete-btn {
+            flex: 1;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .edit-btn {
+            background: var(--gold-crayola);
+            color: var(--smoky-black-1);
+        }
+
+        .delete-btn {
+            background: #F44336;
+            color: white;
+        }
+
+        .edit-btn:hover, .delete-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Orders */
+        .orders-container {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .order-card {
+            background: linear-gradient(135deg, var(--eerie-black-2) 0%, var(--smoky-black-1) 100%);
+            border-radius: 20px;
+            padding: 1.5rem;
+            border: 2px solid var(--eerie-black-3);
+            transition: all 0.3s ease;
+        }
+
+        .order-card:hover {
+            border-color: var(--gold-crayola);
+            transform: translateY(-3px);
+        }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .order-header h3 {
+            color: var(--gold-crayola);
+            font-family: var(--fontFamily-forum);
+            font-size: 1.5rem;
+        }
+
+        .order-status {
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+
+        .order-status.pending {
+            background: rgba(255, 193, 7, 0.2);
+            color: #FFC107;
+            border: 1px solid #FFC107;
+        }
+
+        .order-status.preparing {
+            background: rgba(33, 150, 243, 0.2);
+            color: #2196F3;
+            border: 1px solid #2196F3;
+        }
+
+        .order-status.delivered {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4CAF50;
+            border: 1px solid #4CAF50;
+        }
+
+        .order-status.rejected {
+            background: rgba(244, 67, 54, 0.2);
+            color: #F44336;
+            border: 1px solid #F44336;
+        }
+
+        .order-details p {
+            margin-bottom: 0.5rem;
+            color: var(--quick-silver);
+        }
+
+        .order-details strong {
+            color: var(--white);
+        }
+
+        .order-actions {
+            margin-top: 1rem;
+            text-align: right;
+        }
+
+        .view-btn {
+            background: var(--gold-crayola);
+            color: var(--smoky-black-1);
+            border: none;
+            padding: 8px 20px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .view-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, var(--eerie-black-2) 0%, var(--smoky-black-1) 100%);
+            padding: 2rem;
+            border-radius: 25px;
+            box-shadow: var(--shadow-1);
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 2px solid var(--gold-crayola);
+            position: relative;
+        }
+
+        .modal-content.large {
+            max-width: 800px;
+        }
+
+        .modal-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .modal-header h2 {
+            color: var(--gold-crayola);
+            font-family: var(--fontFamily-forum);
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: var(--gold-crayola);
+            font-size: 2rem;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            background: var(--gold-crayola);
+            color: var(--smoky-black-1);
+        }
+
+        /* Form */
+        .menu-item-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group label {
+            color: var(--gold-crayola);
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 12px;
+            border: 2px solid var(--eerie-black-3);
+            border-radius: 15px;
+            background: var(--eerie-black-2);
+            color: var(--white);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--gold-crayola);
+        }
+
+        .form-group small {
+            color: var(--quick-silver);
+            font-size: 0.8rem;
+            margin-top: 0.25rem;
+            display: block;
+            line-height: 1.4;
+        }
+
+        /* Image Upload Styles */
+        .image-upload-container {
+            position: relative;
+        }
+
+        .image-upload-container input[type="file"] {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+            z-index: 2;
+        }
+
+        .upload-preview {
+            border: 2px dashed var(--eerie-black-3);
+            border-radius: 15px;
+            padding: 2rem;
+            text-align: center;
+            background: var(--eerie-black-2);
+            transition: all 0.3s ease;
+            min-height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .upload-preview:hover {
+            border-color: var(--gold-crayola);
+            background: var(--eerie-black-3);
+            transform: scale(1.02);
+        }
+
+        .image-upload-container:hover .upload-preview {
+            border-color: var(--gold-crayola);
+        }
+
+        .upload-placeholder {
+            color: var(--quick-silver);
+        }
+
+        .upload-placeholder ion-icon {
+            font-size: 3rem;
+            color: var(--gold-crayola);
+            margin-bottom: 1rem;
+        }
+
+        .upload-placeholder p {
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+            color: var(--white);
+        }
+
+        .upload-placeholder small {
+            color: var(--quick-silver);
+            font-size: 0.8rem;
+        }
+
+        .upload-preview.has-image {
+            border-style: solid;
+            border-color: var(--gold-crayola);
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .upload-preview.has-image img {
+            width: 100%;
+            height: 200px;
+            object-fit: contain;
+            display: block;
+            background-color: #000;
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        /* Ensure consistent image sizing in menu grid */
+        .item-image img {
+            width: 100%;
+            height: 200px;
+            object-fit: contain;
+            transition: transform 0.3s ease;
+            border-radius: 10px;
+            background-color: #000;
+            padding: 10px;
+        }
+
+        .item-image img:hover {
+            transform: scale(1.05);
+        }
+
+        /* Ensure consistent image sizing in user menu */
+        .menu-card .card-banner img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            transition: var(--transition-2);
+            background-color: #000;
+            padding: 5px;
+            border-radius: 8px;
+        }
+
+        .upload-preview.has-image .upload-placeholder {
+            display: none;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 1rem;
+        }
+
+        .secondary-btn {
+            background: transparent;
+            color: var(--gold-crayola);
+            border: 2px solid var(--gold-crayola);
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .secondary-btn:hover {
+            background: var(--gold-crayola);
+            color: var(--smoky-black-1);
+        }
+
+        /* Notification */
+        .notification-toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--gold-crayola);
+            color: var(--smoky-black-1);
+            padding: 1rem 2rem;
+            border-radius: 25px;
+            font-weight: 600;
+            z-index: 10000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+
+        .notification-toast.show {
+            transform: translateX(0);
+        }
+
+        .notification-toast.success {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .notification-toast.error {
+            background: #F44336;
+            color: white;
+        }
+
+        .notification-toast.info {
+            background: #2196F3;
+            color: white;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .dashboard-stats {
+                grid-template-columns: 1fr;
+            }
+            
+            .dashboard-actions {
+                grid-template-columns: 1fr;
+            }
+            
+            .menu-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Main Admin Panel -->
+    <div class="admin-panel">
+        <!-- Header -->
+        <header class="admin-header">
+            <div class="header-content">
+                <div class="logo-section">
+                    <img src="../grilli-master/assets/images/logo.svg" width="160" height="50" alt="Grilli - Admin Panel">
+                    <span class="admin-info" id="adminInfo">Welcome, Admin</span>
+                </div>
+                <div class="header-actions">
+                    <button id="logoutBtn" class="logout-btn">Logout</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="admin-main">
+            <!-- Dashboard -->
+            <div id="dashboard" class="dashboard-content">
+                <div class="dashboard-header">
+                    <h1>Admin Dashboard</h1>
+                    <p>Welcome back! Choose an action to continue</p>
+                </div>
+                
+                <div class="dashboard-stats">
+                    <div class="stat-card">
+                        <h3>Total Orders</h3>
+                        <p id="totalOrders">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Pending Orders</h3>
+                        <p id="pendingOrders">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Menu Items</h3>
+                        <p id="totalMenuItems">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Today's Revenue</h3>
+                        <p id="todayRevenue">₹0</p>
+                    </div>
+                </div>
+                
+                <div class="dashboard-actions">
+                    <div class="action-card" onclick="showUpdateOrders()">
+                        <div class="action-icon">📋</div>
+                        <h3>Update Orders</h3>
+                        <p>Manage customer orders and update their status</p>
+                    </div>
+                    
+                    <div class="action-card" onclick="showAddItems()">
+                        <div class="action-icon">🍽️</div>
+                        <h3>Add Items</h3>
+                        <p>Add, edit, and remove menu items</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Items Page -->
+            <div id="addItemsPage" class="page-content">
+                <div class="page-header">
+                    <button class="back-btn" onclick="showDashboard()">← Back to Dashboard</button>
+                    <h2>Add Items</h2>
+                    <div class="header-actions">
+                        <button id="refreshMenuBtn" class="secondary-btn" onclick="adminDashboard.refreshMenuItems()">🔄 Refresh</button>
+                        <button id="addMenuItemBtn" class="primary-btn">+ Add New Item</button>
+                    </div>
+                </div>
+                
+                <div class="menu-grid" id="menuGrid"></div>
+            </div>
+
+            <!-- Update Orders Page -->
+            <div id="orderStatusPage" class="page-content">
+                <div class="page-header">
+                    <button class="back-btn" onclick="showDashboard()">← Back to Dashboard</button>
+                    <h2>Update Orders</h2>
+                    <div class="order-filters">
+                        <select id="statusFilter">
+                            <option value="">All Statuses</option>
+                            <option value="pending">Pending</option>
+                            <option value="payment-done">Payment Done</option>
+                            <option value="preparing">Preparing</option>
+                            <option value="out-for-delivery">Out for Delivery</option>
+                            <option value="delivered">Delivered</option>
+                            <option value="rejected">Rejected</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="orders-container" id="ordersContainer"></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add/Edit Menu Item Modal -->
+    <div id="menuItemModal" class="modal">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <h2 id="menuItemModalTitle">Add New Menu Item</h2>
+                <button class="close-btn" id="closeMenuItemModal">&times;</button>
+            </div>
+            
+            <form id="menuItemForm" class="menu-item-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="itemName">Item Name *</label>
+                        <input type="text" id="itemName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="itemType">Type *</label>
+                        <select id="itemType" required>
+                            <option value="">Select Type</option>
+                            <option value="veg">Vegetarian</option>
+                            <option value="non-veg">Non-Vegetarian</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="itemCategory">Category *</label>
+                        <select id="itemCategory" required>
+                            <option value="">Select Category</option>
+                            <option value="salads">Salads</option>
+                            <option value="main-course">Main Course</option>
+                            <option value="pizza">Pizza</option>
+                            <option value="pasta">Pasta</option>
+                            <option value="rice">Rice</option>
+                            <option value="appetizers">Appetizers</option>
+                            <option value="desserts">Desserts</option>
+                            <option value="beverages">Beverages</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="itemPrice">Price (₹) *</label>
+                        <input type="number" id="itemPrice" step="0.01" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="itemBadge">Badge</label>
+                        <input type="text" id="itemBadge" placeholder="e.g., Popular, Chef Special">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="itemDeliveryTime">Delivery Time</label>
+                        <input type="text" id="itemDeliveryTime" placeholder="e.g., 25-35 minutes" value="25-35 minutes">
+                    </div>
+                    <div class="form-group">
+                        <label for="itemPrepTime">Preparation Time (minutes)</label>
+                        <input type="number" id="itemPrepTime" min="0" value="15">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="itemDescription">Description *</label>
+                    <textarea id="itemDescription" rows="3" required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="itemImage">Upload Image *</label>
+                    <div class="image-upload-container">
+                        <input type="file" id="itemImage" accept="image/*" required>
+                        <div class="upload-preview" id="uploadPreview">
+                            <div class="upload-placeholder">
+                                <ion-icon name="cloud-upload-outline"></ion-icon>
+                                <p>Click to upload image or drag & drop</p>
+                                <small>Supports: JPG, PNG, GIF (Max: 5MB)</small>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" id="testImageUpload" class="secondary-btn" style="margin-top: 10px; font-size: 0.8rem;">
+                        Test Image Upload
+                    </button>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="secondary-btn" id="cancelMenuItem">Cancel</button>
+                    <button type="submit" class="primary-btn">Save Item</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Order Details Modal -->
+    <div id="orderModal" class="modal">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <h2>Order Details</h2>
+                <button class="close-btn" id="closeOrderModal">&times;</button>
+            </div>
+            
+            <div id="orderDetails" class="order-details"></div>
+            
+            <div class="order-actions">
+                <div class="status-update">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="orderStatus">Update Status:</label>
+                            <select id="orderStatus">
+                                <option value="pending">Pending</option>
+                                <option value="payment-done">Payment Done</option>
+                                <option value="preparing">Preparing</option>
+                                <option value="out-for-delivery">Out for Delivery</option>
+                                <option value="delivered">Delivered</option>
+                                <option value="rejected">Rejected</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="adminNotes">Admin Notes:</label>
+                            <textarea id="adminNotes" rows="3" placeholder="Add any notes about this order..."></textarea>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button id="updateStatusBtn" class="primary-btn">Update Status</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="notificationToast" class="notification-toast"></div>
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+    <script src="./dashboard.js"></script>
+</body>
+</html>

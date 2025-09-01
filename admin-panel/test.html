@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ccc; }
+        .success { color: green; }
+        .error { color: red; }
+        button { padding: 10px 20px; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Admin Panel Test</h1>
+    
+    <div class="test-section">
+        <h2>API Tests</h2>
+        <button onclick="testSetupStatus()">Test Setup Status</button>
+        <button onclick="testCreateAdmin()">Test Create Admin</button>
+        <button onclick="testLogin()">Test Login</button>
+        <div id="apiResults"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Database Connection</h2>
+        <button onclick="testMongoConnection()">Test MongoDB Connection</button>
+        <div id="dbResults"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:4001/api/admin';
+        
+        async function testSetupStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/setup-status`);
+                const data = await response.json();
+                document.getElementById('apiResults').innerHTML = 
+                    `<div class="success">Setup Status: ${JSON.stringify(data)}</div>`;
+            } catch (error) {
+                document.getElementById('apiResults').innerHTML = 
+                    `<div class="error">Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testCreateAdmin() {
+            const adminData = {
+                fullName: 'Test Admin',
+                email: 'test@example.com',
+                phone: '1234567890',
+                password: 'testpass123',
+                securityKey: '123456'
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/setup`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(adminData)
+                });
+                const data = await response.json();
+                document.getElementById('apiResults').innerHTML = 
+                    `<div class="success">Create Admin: ${JSON.stringify(data)}</div>`;
+            } catch (error) {
+                document.getElementById('apiResults').innerHTML = 
+                    `<div class="error">Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testLogin() {
+            const loginData = {
+                email: 'test@example.com',
+                password: 'testpass123',
+                securityKey: '123456'
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(loginData)
+                });
+                const data = await response.json();
+                document.getElementById('apiResults').innerHTML = 
+                    `<div class="success">Login: ${JSON.stringify(data)}</div>`;
+            } catch (error) {
+                document.getElementById('apiResults').innerHTML = 
+                    `<div class="error">Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testMongoConnection() {
+            try {
+                const response = await fetch('http://localhost:4001/api/admin/setup-status');
+                if (response.ok) {
+                    document.getElementById('dbResults').innerHTML = 
+                        '<div class="success">MongoDB connection successful</div>';
+                } else {
+                    document.getElementById('dbResults').innerHTML = 
+                        '<div class="error">MongoDB connection failed</div>';
+                }
+            } catch (error) {
+                document.getElementById('dbResults').innerHTML = 
+                    `<div class="error">MongoDB connection error: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Ordering System - Grilli</title>
+    <link rel="stylesheet" href="./grilli-master/assets/css/style.css">
+    <link rel="stylesheet" href="./grilli-master/assets/css/ordering-modal.css">
+    <style>
+        .test-container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .test-menu-item {
+            border: 2px solid #d4af37;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .test-menu-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(212, 175, 55, 0.3);
+        }
+        .test-menu-item img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+        .test-button {
+            background: #d4af37;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .test-button:hover {
+            background: #b8941f;
+        }
+        .golden-section {
+            background: linear-gradient(135deg, #d4af37 0%, #f4d03f 100%);
+            color: #2c3e50;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 30px 0;
+            text-align: center;
+        }
+        .golden-section h2 {
+            margin: 0 0 20px 0;
+            font-size: 2.5rem;
+            font-family: 'Forum', cursive;
+        }
+        .golden-section p {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+        }
+        .theme-test-info {
+            background: #f8f9fa;
+            border: 2px solid #d4af37;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .theme-test-info h3 {
+            color: #d4af37;
+            margin-top: 0;
+        }
+        .theme-instructions {
+            background: #e8f4fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 Test Ordering System</h1>
+        <p>This page tests the ordering system functionality. Click on any menu item to place an order.</p>
+        
+        <!-- Golden Section Test Area -->
+        <div class="golden-section">
+            <h2>🌟 Golden Section Test</h2>
+            <p>This is the designated Golden section for testing the dark theme functionality.</p>
+            <p><strong>Test the dark theme by clicking on menu items below and using the theme toggle button!</strong></p>
+        </div>
+        
+        <div class="theme-test-info">
+            <h3>🎨 Dark Theme Testing Instructions</h3>
+            <div class="theme-instructions">
+                <p><strong>Step 1:</strong> Look for the theme toggle button (☀️) in the top-left corner</p>
+                <p><strong>Step 2:</strong> Click on any menu item below to open the ordering modal</p>
+                <p><strong>Step 3:</strong> The modal should open in DARK THEME by default</p>
+                <p><strong>Step 4:</strong> Click the theme toggle button to switch between themes</p>
+                <p><strong>Step 5:</strong> Verify that all elements remain clearly visible in both themes</p>
+            </div>
+            <div style="margin-top: 15px; text-align: center;">
+                <button onclick="forceDarkTheme()" style="background: #d4af37; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">
+                    🔧 Force Dark Theme
+                </button>
+                <p style="font-size: 0.9em; margin-top: 5px; color: #666;">Use this if the modal doesn't open in dark theme</p>
+            </div>
+        </div>
+        
+        <div class="test-menu-item" data-item-id="1">
+            <h3>Greek Salad</h3>
+            <img src="./grilli-master/assets/images/menu-1.png" alt="Greek Salad">
+            <p>Fresh tomatoes, green bell pepper, sliced cucumber, onion, olives, and feta cheese.</p>
+            <p><strong>Price: ₹299.00</strong></p>
+            <button class="test-button" onclick="testOrder(1)">Order Now</button>
+        </div>
+        
+        <div class="test-menu-item" data-item-id="2">
+            <h3>Lasagne</h3>
+            <img src="./grilli-master/assets/images/menu-2.png" alt="Lasagne">
+            <p>Vegetables, cheeses, ground meats, tomato sauce, seasonings and spices.</p>
+            <p><strong>Price: ₹399.00</strong></p>
+            <button class="test-button" onclick="testOrder(2)">Order Now</button>
+        </div>
+        
+        <div class="test-menu-item" data-item-id="3">
+            <h3>Butternut Pumpkin</h3>
+            <img src="./grilli-master/assets/images/menu-3.png" alt="Butternut Pumpkin">
+            <p>Typesetting industry lorem Lorem Ipsum is simply dummy text of the priand.</p>
+            <p><strong>Price: ₹499.00</strong></p>
+            <button class="test-button" onclick="testOrder(3)">Order Now</button>
+        </div>
+        
+        <div id="testResults" style="margin-top: 30px; padding: 20px; background: #f5f5f5; border-radius: 10px;">
+            <h3>Test Results:</h3>
+            <div id="testOutput"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="./grilli-master/assets/js/ordering-system.js"></script>
+    
+    <script>
+        function testOrder(itemId) {
+            console.log('Testing order for item:', itemId);
+            
+            // Test the ordering system
+            if (window.orderingSystem) {
+                window.orderingSystem.showOrderModal(itemId);
+                logTest('Order modal opened for item ' + itemId);
+                logTest('💡 Now try clicking the theme toggle button (🌙) to test dark theme!', 'info');
+            } else {
+                logTest('ERROR: Ordering system not initialized', 'error');
+            }
+        }
+        
+        function logTest(message, type = 'info') {
+            const output = document.getElementById('testOutput');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.style.color = type === 'error' ? 'red' : type === 'success' ? 'green' : type === 'info' ? '#2196f3' : 'black';
+            logEntry.style.marginBottom = '5px';
+            logEntry.textContent = `[${timestamp}] ${message}`;
+            output.appendChild(logEntry);
+        }
+        
+        // Test API connectivity
+        async function testAPI() {
+            try {
+                const response = await fetch('http://localhost:4000/api/health');
+                if (response.ok) {
+                    logTest('✅ API health check passed', 'success');
+                } else {
+                    logTest('❌ API health check failed', 'error');
+                }
+            } catch (error) {
+                logTest('❌ API connection failed: ' + error.message, 'error');
+            }
+            
+            try {
+                const response = await fetch('http://localhost:4000/api/menu-items');
+                if (response.ok) {
+                    const items = await response.json();
+                    logTest(`✅ Menu items loaded: ${items.length} items`, 'success');
+                } else {
+                    logTest('❌ Failed to load menu items', 'error');
+                }
+            } catch (error) {
+                logTest('❌ Menu items API failed: ' + error.message, 'error');
+            }
+        }
+        
+        // Test theme functionality
+        function testThemeFunctionality() {
+            if (window.orderingSystem) {
+                logTest('🎨 Theme toggle button should be visible in top-left corner', 'info');
+                logTest('☀️ Theme toggle shows sun icon (dark theme active)', 'info');
+                logTest('🌙 Click the sun icon to switch to light theme', 'info');
+            }
+        }
+        
+        function forceDarkTheme() {
+            if (window.orderingSystem) {
+                window.orderingSystem.forceDarkTheme();
+                logTest('🔧 Dark theme forced - check console for details', 'info');
+            } else {
+                logTest('❌ Ordering system not available', 'error');
+            }
+        }
+        
+        // Run tests when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            logTest('Page loaded, running tests...');
+            setTimeout(testAPI, 1000);
+            
+            // Test ordering system initialization
+            setTimeout(() => {
+                if (window.orderingSystem) {
+                    logTest('✅ Ordering system initialized successfully', 'success');
+                    testThemeFunctionality();
+                } else {
+                    logTest('❌ Ordering system failed to initialize', 'error');
+                }
+            }, 2000);
+        });
+    </script>
+</body>
+</html>

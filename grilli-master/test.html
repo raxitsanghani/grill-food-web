@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Test</title>
+    <link rel="stylesheet" href="./assets/css/login.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #1a1a1a;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        .test-info {
+            background: #333;
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-info">
+        <h2>Login System Test</h2>
+        <p>This page tests the login system independently.</p>
+        <p>Expected behavior:</p>
+        <ul>
+            <li>1. Grill animation shows for 3 seconds</li>
+            <li>2. Login modal appears</li>
+            <li>3. You can switch between login and signup</li>
+            <li>4. After successful login, main content shows</li>
+        </ul>
+    </div>
+
+    <!-- Grill Animation -->
+    <div class="grill-animation">
+        <div class="grill-logo">GRILLI</div>
+        <div class="grill-loading"></div>
+        <div class="grill-text">Loading Amazing Food...</div>
+    </div>
+
+    <!-- Login Modal -->
+    <div class="login-overlay">
+        <div class="login-modal">
+            <!-- Login Form -->
+            <form id="loginForm" class="login-form">
+                <h2>Welcome Back</h2>
+                
+                <div class="form-group">
+                    <label for="loginEmail">Email</label>
+                    <input type="email" id="loginEmail" placeholder="Enter your email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="loginPassword" placeholder="Enter your password" required>
+                        <button type="button" class="password-toggle" onclick="togglePassword('loginPassword')">
+                            <ion-icon name="eye-outline" id="loginPasswordIcon"></ion-icon>
+                        </button>
+                    </div>
+                </div>
+                
+                <button type="submit" class="login-btn">Login</button>
+                
+                <div class="error-message"></div>
+                
+                <div class="switch-form">
+                    <span>Don't have an account? </span>
+                    <a id="switchToSignup">Sign Up</a>
+                </div>
+            </form>
+
+            <!-- Signup Form -->
+            <form id="signupForm" class="login-form" style="display: none;">
+                <h2>Create Account</h2>
+                
+                <div class="form-group">
+                    <label for="signupEmail">Email</label>
+                    <input type="email" id="signupEmail" placeholder="Enter your email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="signupPhone">Phone Number</label>
+                    <input type="tel" id="signupPhone" placeholder="Enter your phone number" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="signupPassword">Password</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="signupPassword" placeholder="Enter your password" required>
+                        <button type="button" class="password-toggle" onclick="togglePassword('signupPassword')">
+                            <ion-icon name="eye-outline" id="signupPasswordIcon"></ion-icon>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="signupConfirmPassword">Confirm Password</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="signupConfirmPassword" placeholder="Confirm your password" required>
+                        <button type="button" class="password-toggle" onclick="togglePassword('signupConfirmPassword')">
+                            <ion-icon name="eye-outline" id="signupConfirmPasswordIcon"></ion-icon>
+                        </button>
+                    </div>
+                </div>
+                
+                <button type="submit" class="login-btn">Sign Up</button>
+                
+                <div class="error-message"></div>
+                
+                <div class="switch-form">
+                    <span>Already have an account? </span>
+                    <a id="switchToLogin">Login</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Content (hidden initially) -->
+    <div class="main-content">
+        <h1>Welcome to Grilli Restaurant!</h1>
+        <p>You have successfully logged in.</p>
+        <button id="logoutBtn" class="login-btn">Logout</button>
+    </div>
+
+    <script src="./assets/js/login.js"></script>
+    <!-- ionicon link -->
+    <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+</body>
+</html>

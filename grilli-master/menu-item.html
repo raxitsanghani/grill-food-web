@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Menu Item - Grilli</title>
+  <link rel="shortcut icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700&family=Forum&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./assets/css/style.css">
+  <link rel="stylesheet" href="./assets/css/menu-item.css">
+</head>
+
+<body id="top">
+
+  <div class="preload" data-preaload>
+    <div class="circle"></div>
+    <p class="text">Grilli</p>
+  </div>
+
+  <header class="header" data-header>
+    <div class="container">
+      <a href="./index.html" class="logo">
+        <img src="./assets/images/logo.svg" width="160" height="50" alt="Grilli - Home">
+      </a>
+
+      <button id="logoutBtn" class="btn btn-primary" style="margin-left: 15px; display: none;">
+        <span class="text text-1">Logout</span>
+        <span class="text text-2" aria-hidden="true">Logout</span>
+      </button>
+
+      <nav class="navbar" data-navbar>
+        <button class="close-btn" aria-label="close menu" data-nav-toggler>
+          <ion-icon name="close-outline" aria-hidden="true"></ion-icon>
+        </button>
+
+        <a href="./index.html" class="logo">
+          <img src="./assets/images/logo.svg" width="160" height="50" alt="Grilli - Home">
+        </a>
+
+        <ul class="navbar-list">
+          <li class="navbar-item">
+            <a href="./index.html#home" class="navbar-link hover-underline">
+              <div class="separator"></div>
+              <span class="span">Home</span>
+            </a>
+          </li>
+          <li class="navbar-item">
+            <a href="./index.html#menu" class="navbar-link hover-underline active">
+              <div class="separator"></div>
+              <span class="span">Menus</span>
+            </a>
+          </li>
+          <li class="navbar-item">
+            <a href="./index.html#about" class="navbar-link hover-underline">
+              <div class="separator"></div>
+              <span class="span">About Us</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+
+      <button class="nav-open-btn" aria-label="open menu" data-nav-toggler>
+        <span class="line line-1"></span>
+        <span class="line line-2"></span>
+        <span class="line line-3"></span>
+      </button>
+
+      <div class="overlay" data-nav-toggler data-overlay></div>
+    </div>
+  </header>
+
+  <main>
+    <article>
+      <section class="menu-item-detail">
+        <div class="container">
+          <div class="menu-item-content">
+            <div class="item-image">
+              <img id="itemImage" src="" alt="" class="img-cover">
+            </div>
+            
+            <div class="item-details">
+              <div class="item-header">
+                <h1 id="itemName" class="headline-1"></h1>
+                <div class="item-badges">
+                  <span id="itemBadge" class="badge label-1" style="display: none;"></span>
+                </div>
+                <div class="item-price">
+                  <span id="itemPrice" class="title-2"></span>
+                </div>
+              </div>
+              
+              <p id="itemDescription" class="section-text"></p>
+              
+              <div class="delivery-info">
+                <div class="delivery-time">
+                  <ion-icon name="time-outline"></ion-icon>
+                  <span>Estimated Delivery: <strong id="deliveryTime">25-35 minutes</strong></span>
+                </div>
+                <div class="delivery-fee">
+                  <ion-icon name="bicycle-outline"></ion-icon>
+                  <span>Delivery Fee: <strong>₹40</strong></span>
+                </div>
+              </div>
+              
+              <div class="order-section">
+                <div class="quantity-selector">
+                  <label for="quantity">Quantity:</label>
+                  <div class="quantity-controls">
+                    <button type="button" class="quantity-btn decrease">-</button>
+                    <span class="quantity-display">1</span>
+                    <button type="button" class="quantity-btn increase">+</button>
+                  </div>
+                </div>
+                
+                <div class="price-breakdown">
+                  <div class="price-row">
+                    <span>Base Price:</span>
+                    <span class="base-price">₹0.00</span>
+                  </div>
+                  <div class="price-row">
+                    <span>Delivery Fee:</span>
+                    <span class="delivery-fee">₹40.00</span>
+                  </div>
+                  <div class="price-row">
+                    <span>GST (18%):</span>
+                    <span class="gst-amount">₹0.00</span>
+                  </div>
+                  <div class="price-row total">
+                    <span>Total:</span>
+                    <span class="total-price">₹0.00</span>
+                  </div>
+                </div>
+                
+                <button id="orderNowBtn" class="btn btn-primary">
+                  <span class="text text-1">Order Now</span>
+                  <span class="text text-2" aria-hidden="true">Order Now</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </article>
+  </main>
+
+  <!-- Order Modal -->
+  <div id="orderModal" class="order-modal">
+    <div class="order-modal-content">
+      <div class="modal-header">
+        <h2>Complete Your Order</h2>
+        <button id="closeOrderModal" class="close-modal-btn">
+          <ion-icon name="close-outline"></ion-icon>
+        </button>
+      </div>
+      
+      <div class="order-steps">
+        <!-- Step 1: Customer Details -->
+        <div id="step1" class="order-step active">
+          <h3>Step 1: Customer Details</h3>
+          <form id="customerDetailsForm" class="order-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="customerName">Full Name *</label>
+                <input type="text" id="customerName" required>
+              </div>
+              <div class="form-group">
+                <label for="customerPhone">Phone Number *</label>
+                <input type="tel" id="customerPhone" required>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="customerAddress">Delivery Address *</label>
+              <textarea id="customerAddress" rows="3" required></textarea>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="customerCity">City *</label>
+                <input type="text" id="customerCity" value="Ahmedabad" required>
+              </div>
+              <div class="form-group">
+                <label for="customerPincode">Pincode *</label>
+                <input type="text" id="customerPincode" required>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="deliveryInstructions">Delivery Instructions (Optional)</label>
+              <textarea id="deliveryInstructions" rows="2" placeholder="Any special instructions for delivery..."></textarea>
+            </div>
+            <button type="button" id="nextToPayment" class="btn btn-primary">Next: Payment</button>
+          </form>
+        </div>
+        
+        <!-- Step 2: Payment Method -->
+        <div id="step2" class="order-step">
+          <h3>Step 2: Payment Method</h3>
+          <div class="payment-methods">
+            <div class="payment-method">
+              <input type="radio" id="cod" name="paymentMethod" value="cod" checked>
+              <label for="cod" class="payment-label">
+                <div class="payment-icon">💵</div>
+                <div class="payment-info">
+                  <span class="payment-name">Cash on Delivery (COD)</span>
+                  <span class="payment-desc">Pay when you receive your order</span>
+                </div>
+              </label>
+            </div>
+            
+            <div class="payment-method">
+              <input type="radio" id="upi" name="paymentMethod" value="upi">
+              <label for="upi" class="payment-label">
+                <div class="payment-icon">📱</div>
+                <div class="payment-info">
+                  <span class="payment-name">UPI Payment</span>
+                  <span class="payment-desc">Google Pay, PhonePe, Paytm</span>
+                </div>
+              </label>
+            </div>
+            
+            <div class="payment-method">
+              <input type="radio" id="card" name="paymentMethod" value="card">
+              <label for="card" class="payment-label">
+                <div class="payment-icon">💳</div>
+                <div class="payment-info">
+                  <span class="payment-name">Credit/Debit Card</span>
+                  <span class="payment-desc">Visa, MasterCard, RuPay</span>
+                </div>
+              </label>
+            </div>
+            
+            <div class="payment-method">
+              <input type="radio" id="netbanking" name="paymentMethod" value="netbanking">
+              <label for="netbanking" class="payment-label">
+                <div class="payment-icon">🏦</div>
+                <div class="payment-info">
+                  <span class="payment-name">Net Banking</span>
+                  <span class="payment-desc">All major Indian banks</span>
+                </div>
+              </label>
+            </div>
+          </div>
+          
+          <div class="order-summary">
+            <h4>Order Summary</h4>
+            <div class="summary-item">
+              <span>Item:</span>
+              <span id="summaryItemName"></span>
+            </div>
+            <div class="summary-item">
+              <span>Quantity:</span>
+              <span id="summaryQuantity"></span>
+            </div>
+            <div class="summary-item">
+              <span>Item Price:</span>
+              <span id="summaryItemPrice"></span>
+            </div>
+            <div class="summary-item">
+              <span>Delivery Fee:</span>
+              <span>₹40</span>
+            </div>
+            <div class="summary-item total">
+              <span>Total Amount:</span>
+              <span id="summaryTotal"></span>
+            </div>
+          </div>
+          
+          <div class="step-buttons">
+            <button type="button" id="backToDetails" class="btn btn-secondary">Back</button>
+            <button type="button" id="placeOrderBtn" class="btn btn-primary">Place Order</button>
+          </div>
+        </div>
+        
+        <!-- Step 3: Order Confirmation -->
+        <div id="step3" class="order-step">
+          <div class="order-success">
+            <div class="success-icon">✅</div>
+            <h3>Order Placed Successfully!</h3>
+            <p>Your order has been confirmed and is being prepared.</p>
+            
+            <div class="order-details">
+              <div class="detail-item">
+                <strong>Order ID:</strong>
+                <span id="orderId"></span>
+              </div>
+              <div class="detail-item">
+                <strong>Estimated Delivery:</strong>
+                <span id="estimatedDelivery"></span>
+              </div>
+              <div class="detail-item">
+                <strong>Total Amount:</strong>
+                <span id="finalTotal"></span>
+              </div>
+            </div>
+            
+            <div class="next-steps">
+              <p>You will receive SMS updates about your order status.</p>
+              <p>Our delivery partner will call you before delivery.</p>
+            </div>
+            
+            <div class="action-buttons">
+              <a href="./index.html" class="btn btn-secondary">Back to Menu</a>
+              <button type="button" id="trackOrderBtn" class="btn btn-primary">Track Order</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <a href="#top" class="back-top-btn active" aria-label="back to top" data-back-top-btn>
+    <ion-icon name="chevron-up" aria-hidden="true"></ion-icon>
+  </a>
+
+  <script src="./assets/js/script.js"></script>
+  <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+  <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+  <script src="./assets/js/menu-item.js"></script>
+</body>
+
+</html>

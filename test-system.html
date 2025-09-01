@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grilli System Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #0056b3;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+    </style>
+</head>
+<body>
+    <h1>Grilli Restaurant System Test</h1>
+    
+    <div class="test-section">
+        <h2>System Status</h2>
+        <div id="systemStatus" class="status info">Checking system status...</div>
+        <button class="test-button" onclick="checkSystemStatus()">Check Status</button>
+    </div>
+
+    <div class="test-section">
+        <h2>Menu Items Test</h2>
+        <div id="menuTestStatus" class="status info">Ready to test menu items</div>
+        <button class="test-button" onclick="testMenuItems()">Test Menu Items</button>
+        <div id="menuItemsList"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Order Placement Test</h2>
+        <div id="orderTestStatus" class="status info">Ready to test order placement</div>
+        <button class="test-button" onclick="testOrderPlacement()">Test Order Placement</button>
+        <div id="orderTestResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Admin Panel Test</h2>
+        <div id="adminTestStatus" class="status info">Ready to test admin panel</div>
+        <button class="test-button" onclick="testAdminPanel()">Test Admin Panel</button>
+        <div id="adminTestResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Quick Links</h2>
+        <a href="http://localhost:4000" class="test-button" target="_blank">User Panel</a>
+        <a href="http://localhost:4001" class="test-button" target="_blank">Admin Panel</a>
+        <a href="http://localhost:4000/menu-item.html?id=test" class="test-button" target="_blank">Menu Item Page</a>
+    </div>
+
+    <script>
+        async function checkSystemStatus() {
+            const statusDiv = document.getElementById('systemStatus');
+            statusDiv.textContent = 'Checking system status...';
+            statusDiv.className = 'status info';
+
+            try {
+                // Check main server
+                const mainResponse = await fetch('http://localhost:4000/api/health');
+                const mainStatus = mainResponse.ok ? 'Running' : 'Error';
+
+                // Check admin server
+                const adminResponse = await fetch('http://localhost:4001/api/admin/setup-status');
+                const adminStatus = adminResponse.ok ? 'Running' : 'Error';
+
+                statusDiv.innerHTML = `
+                    <strong>Main Server:</strong> ${mainStatus}<br>
+                    <strong>Admin Server:</strong> ${adminStatus}<br>
+                    <strong>Timestamp:</strong> ${new Date().toLocaleString()}
+                `;
+                statusDiv.className = 'status success';
+            } catch (error) {
+                statusDiv.textContent = `Error: ${error.message}`;
+                statusDiv.className = 'status error';
+            }
+        }
+
+        async function testMenuItems() {
+            const statusDiv = document.getElementById('menuTestStatus');
+            const listDiv = document.getElementById('menuItemsList');
+            
+            statusDiv.textContent = 'Testing menu items...';
+            statusDiv.className = 'status info';
+
+            try {
+                const response = await fetch('http://localhost:4000/api/menu-items');
+                if (response.ok) {
+                    const menuItems = await response.json();
+                    statusDiv.textContent = `Success! Found ${menuItems.length} menu items`;
+                    statusDiv.className = 'status success';
+                    
+                    listDiv.innerHTML = menuItems.map(item => `
+                        <div style="border: 1px solid #ddd; padding: 10px; margin: 5px 0; border-radius: 4px;">
+                            <strong>${item.name}</strong> - ₹${item.price}<br>
+                            <small>${item.description}</small>
+                        </div>
+                    `).join('');
+                } else {
+                    throw new Error('Failed to fetch menu items');
+                }
+            } catch (error) {
+                statusDiv.textContent = `Error: ${error.message}`;
+                statusDiv.className = 'status error';
+                listDiv.innerHTML = '';
+            }
+        }
+
+        async function testOrderPlacement() {
+            const statusDiv = document.getElementById('orderTestStatus');
+            const resultDiv = document.getElementById('orderTestResult');
+            
+            statusDiv.textContent = 'Testing order placement...';
+            statusDiv.className = 'status info';
+
+            try {
+                const testOrder = {
+                    itemName: 'Test Item',
+                    quantity: 1,
+                    unitPrice: 100,
+                    totalPrice: 100,
+                    customerName: 'Test Customer',
+                    customerPhone: '1234567890',
+                    customerEmail: 'test@example.com',
+                    deliveryDate: '2024-12-25',
+                    deliveryTime: '12:00',
+                    paymentMethod: 'cash',
+                    specialInstructions: 'Test order'
+                };
+
+                const response = await fetch('http://localhost:4000/api/orders', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(testOrder)
+                });
+
+                if (response.ok) {
+                    const order = await response.json();
+                    statusDiv.textContent = 'Success! Order placed successfully';
+                    statusDiv.className = 'status success';
+                    resultDiv.innerHTML = `
+                        <div style="border: 1px solid #ddd; padding: 10px; margin: 5px 0; border-radius: 4px;">
+                            <strong>Order ID:</strong> ${order._id}<br>
+                            <strong>Status:</strong> ${order.status}<br>
+                            <strong>Item:</strong> ${order.itemName}
+                        </div>
+                    `;
+                } else {
+                    throw new Error('Failed to place order');
+                }
+            } catch (error) {
+                statusDiv.textContent = `Error: ${error.message}`;
+                statusDiv.className = 'status error';
+                resultDiv.innerHTML = '';
+            }
+        }
+
+        async function testAdminPanel() {
+            const statusDiv = document.getElementById('adminTestStatus');
+            const resultDiv = document.getElementById('adminTestResult');
+            
+            statusDiv.textContent = 'Testing admin panel...';
+            statusDiv.className = 'status info';
+
+            try {
+                const response = await fetch('http://localhost:4001/api/admin/setup-status');
+                if (response.ok) {
+                    const data = await response.json();
+                    statusDiv.textContent = 'Success! Admin panel is accessible';
+                    statusDiv.className = 'status success';
+                    resultDiv.innerHTML = `
+                        <div style="border: 1px solid #ddd; padding: 10px; margin: 5px 0; border-radius: 4px;">
+                            <strong>Setup Required:</strong> ${data.requiresSetup}<br>
+                            <strong>Admin Exists:</strong> ${data.adminExists}<br>
+                            <strong>Status:</strong> Ready
+                        </div>
+                    `;
+                } else {
+                    throw new Error('Admin panel not accessible');
+                }
+            } catch (error) {
+                statusDiv.textContent = `Error: ${error.message}`;
+                statusDiv.className = 'status error';
+                resultDiv.innerHTML = '';
+            }
+        }
+
+        // Auto-check system status on page load
+        window.addEventListener('load', checkSystemStatus);
+    </script>
+</body>
+</html>

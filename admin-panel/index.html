@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grilli - Admin Panel</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Forum&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --gold-crayola: hsl(38, 61%, 73%);
+            --quick-silver: hsla(0, 0%, 65%, 1);
+            --davys-grey: hsla(30, 3%, 34%, 1);
+            --smoky-black-1: hsla(40, 12%, 5%, 1);
+            --smoky-black-2: hsla(30, 8%, 5%, 1);
+            --smoky-black-3: hsla(0, 3%, 7%, 1);
+            --eerie-black-1: hsla(210, 4%, 9%, 1);
+            --eerie-black-2: hsla(210, 4%, 11%, 1);
+            --eerie-black-3: hsla(180, 2%, 8%, 1);
+            --eerie-black-4: hsla(0, 0%, 13%, 1);
+            --white: hsla(0, 0%, 100%, 1);
+            --white-alpha-20: hsla(0, 0%, 100%, 0.2);
+            --white-alpha-10: hsla(0, 0%, 100%, 0.1);
+            --black: hsla(0, 0%, 0%, 1);
+            --black-alpha-80: hsla(0, 0%, 0%, 0.8);
+            --black-alpha-15: hsla(0, 0%, 0%, 0.15);
+            --loading-text-gradient: linear-gradient(90deg, transparent 0% 16.66%, var(--smoky-black-3) 33.33% 50%,  transparent 66.66% 75%);
+            --gradient-1: linear-gradient(to top,hsla(0, 0%, 0%, 0.9),hsla(0, 0%, 0%, 0.7),transparent);
+            --fontFamily-forum: 'Forum', cursive;
+            --fontFamily-dm_sans: 'DM Sans', sans-serif;
+            --fontSize-display-1: calc(1.3rem + 6.7vw);
+            --fontSize-headline-1: calc(2rem + 2.5vw);
+            --fontSize-headline-2: calc(1.3rem + 2.4vw);
+            --fontSize-title-1: calc(1.6rem + 1.2vw);
+            --fontSize-title-2: 2.2rem;
+            --fontSize-title-3: 2.1rem;
+            --fontSize-title-4: calc(1.6rem + 1.2vw);
+            --fontSize-body-1: 2.4rem;
+            --fontSize-body-2: 1.6rem;
+            --fontSize-body-3: 1.8rem;
+            --fontSize-body-4: 1.6rem;
+            --fontSize-label-1: 1.4rem;
+            --fontSize-label-2: 1.2rem;
+            --weight-regular: 400;
+            --weight-bold: 700;
+            --lineHeight-1: 1em;
+            --lineHeight-2: 1.2em;
+            --lineHeight-3: 1.5em;
+            --lineHeight-4: 1.6em;
+            --lineHeight-5: 1.85em;
+            --lineHeight-6: 1.4em;
+            --letterSpacing-1: 0.15em;
+            --letterSpacing-2: 0.4em;
+            --letterSpacing-3: 0.2em;
+            --letterSpacing-4: 0.3em;
+            --letterSpacing-5: 3px;
+            --section-space: 70px;
+            --shadow-1: 0px 0px 25px 0px hsla(0, 0%, 0%, 0.25);
+        }
+    </style>
+    <link rel="stylesheet" href="./styles.css">
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="loading-screen active">
+        <div class="loading-content">
+            <div class="loading-logo">
+                <img src="../grilli-master/assets/images/logo.svg" width="160" height="50" alt="Grilli">
+            </div>
+            <div class="loading-text">Grilli</div>
+            <div class="loading-spinner"></div>
+        </div>
+    </div>
+
+    <!-- Account Creation Modal -->
+    <div id="accountCreationModal" class="modal active">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <div class="logo-section">
+                    <img src="../grilli-master/assets/images/logo.svg" width="160" height="50" alt="Grilli - Admin Panel">
+                </div>
+                <h2>Create Admin Account</h2>
+                <p>First-time setup for restaurant management</p>
+            </div>
+            
+            <form id="accountCreationForm" class="admin-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="fullName">Full Name *</label>
+                        <input type="text" id="fullName" placeholder="Enter your full name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email ID *</label>
+                        <input type="email" id="email" placeholder="Enter your email address" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="phone">Phone Number *</label>
+                        <input type="tel" id="phone" placeholder="Enter your phone number" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password *</label>
+                        <div class="password-input">
+                            <input type="password" id="password" placeholder="Create a strong password" required>
+                            <button type="button" class="eye-btn" onclick="togglePassword('password')">👁️</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="confirmPassword">Confirm Password *</label>
+                    <div class="password-input">
+                        <input type="password" id="confirmPassword" placeholder="Confirm your password" required>
+                        <button type="button" class="eye-btn" onclick="togglePassword('confirmPassword')">👁️</button>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="securityKey">6-Digit Security Key *</label>
+                    <input type="text" id="securityKey" placeholder="Enter 6 digits (e.g., 123456)" maxlength="6" pattern="[0-9]{6}" required>
+                    <small>This key will be required for future logins</small>
+                </div>
+                
+                <button type="submit" class="primary-btn">Create Admin Account</button>
+                
+                <div id="accountCreationError" class="error-message"></div>
+                
+                <div class="form-footer">
+                    <p>Already have an account? <button type="button" class="link-btn" onclick="showLogin()">Login here</button></p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="logo-section">
+                    <img src="../grilli-master/assets/images/logo.svg" width="160" height="50" alt="Grilli - Admin Panel">
+                </div>
+                <h2>Admin Login</h2>
+                <p>Restaurant Management System</p>
+            </div>
+            
+            <form id="loginForm" class="admin-form">
+                <div class="form-group">
+                    <label for="loginEmail">Email ID</label>
+                    <input type="email" id="loginEmail" placeholder="Enter your email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <div class="password-input">
+                        <input type="password" id="loginPassword" placeholder="Enter your password" required>
+                        <button type="button" class="eye-btn" onclick="togglePassword('loginPassword')">👁️</button>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="loginSecurityKey">Security Key</label>
+                    <input type="text" id="loginSecurityKey" placeholder="Enter 6-digit security key" maxlength="6" pattern="[0-9]{6}" required>
+                </div>
+                
+                <button type="submit" class="primary-btn">Login</button>
+                
+                <div id="loginError" class="error-message"></div>
+                
+                <div class="form-footer">
+                    <p>Don't have an admin account? <button type="button" class="link-btn" onclick="showSignup()">Create one</button></p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Admin Panel -->
+    <div id="adminPanel" class="admin-panel hidden">
+        <!-- Header -->
+        <header class="admin-header">
+            <div class="header-content">
+                <div class="logo-section">
+                    <img src="../grilli-master/assets/images/logo.svg" width="160" height="50" alt="Grilli - Admin Panel">
+                    <span class="admin-info" id="adminInfo"></span>
+                </div>
+                <div class="header-actions">
+                    <button id="logoutBtn" class="logout-btn">Logout</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="admin-main">
+            <!-- Dashboard -->
+            <div id="dashboard" class="dashboard-content">
+                <div class="dashboard-header">
+                    <h1>Admin Dashboard</h1>
+                    <p>Welcome back! Choose an action to continue</p>
+                </div>
+                
+                <div class="dashboard-stats">
+                    <div class="stat-card">
+                        <h3>Total Orders</h3>
+                        <p id="totalOrders">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Pending Orders</h3>
+                        <p id="pendingOrders">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Menu Items</h3>
+                        <p id="totalMenuItems">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Today's Revenue</h3>
+                        <p id="todayRevenue">₹0</p>
+                    </div>
+                </div>
+                
+                <div class="dashboard-actions">
+                    <div class="action-card" onclick="showUpdateOrders()">
+                        <div class="action-icon">📋</div>
+                        <h3>Update Orders</h3>
+                        <p>Manage customer orders and update their status</p>
+                    </div>
+                    
+                    <div class="action-card" onclick="showAddItems()">
+                        <div class="action-icon">🍽️</div>
+                        <h3>Add Items</h3>
+                        <p>Add, edit, and remove menu items</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Items Page -->
+            <div id="addItemsPage" class="page-content">
+                <div class="page-header">
+                    <button class="back-btn" onclick="showDashboard()">← Back to Dashboard</button>
+                    <h2>Add Items</h2>
+                    <button id="addMenuItemBtn" class="primary-btn">+ Add New Item</button>
+                </div>
+                
+                <div class="menu-grid" id="menuGrid"></div>
+            </div>
+
+            <!-- Update Orders Page -->
+            <div id="orderStatusPage" class="page-content">
+                <div class="page-header">
+                    <button class="back-btn" onclick="showDashboard()">← Back to Dashboard</button>
+                    <h2>Update Orders</h2>
+                    <div class="order-filters">
+                        <select id="statusFilter">
+                            <option value="">All Statuses</option>
+                            <option value="pending">Pending</option>
+                            <option value="payment-done">Payment Done</option>
+                            <option value="preparing">Preparing</option>
+                            <option value="out-for-delivery">Out for Delivery</option>
+                            <option value="delivered">Delivered</option>
+                            <option value="rejected">Rejected</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="orders-container" id="ordersContainer"></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add/Edit Menu Item Modal -->
+    <div id="menuItemModal" class="modal">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <h2 id="menuItemModalTitle">Add New Menu Item</h2>
+                <button class="close-btn" id="closeMenuItemModal">&times;</button>
+            </div>
+            
+            <form id="menuItemForm" class="menu-item-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="itemName">Item Name *</label>
+                        <input type="text" id="itemName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="itemType">Type *</label>
+                        <select id="itemType" required>
+                            <option value="">Select Type</option>
+                            <option value="veg">Vegetarian</option>
+                            <option value="non-veg">Non-Vegetarian</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="itemPrice">Price (₹) *</label>
+                        <input type="number" id="itemPrice" step="0.01" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="itemBadge">Badge</label>
+                        <input type="text" id="itemBadge" placeholder="e.g., Popular, Chef Special">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="itemDeliveryTime">Delivery Time</label>
+                        <input type="text" id="itemDeliveryTime" placeholder="e.g., 25-35 minutes" value="25-35 minutes">
+                    </div>
+                    <div class="form-group">
+                        <label for="itemPrepTime">Preparation Time (minutes)</label>
+                        <input type="number" id="itemPrepTime" min="0" value="15">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="itemDescription">Description *</label>
+                    <textarea id="itemDescription" rows="3" required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="itemImage">Image URL *</label>
+                    <input type="url" id="itemImage" placeholder="Enter image URL" required>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="secondary-btn" id="cancelMenuItem">Cancel</button>
+                    <button type="submit" class="primary-btn">Save Item</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Order Details Modal -->
+    <div id="orderModal" class="modal">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <h2>Order Details</h2>
+                <button class="close-btn" id="closeOrderModal">&times;</button>
+            </div>
+            
+            <div id="orderDetails" class="order-details"></div>
+            
+            <div class="order-actions">
+                <div class="status-update">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="orderStatus">Update Status:</label>
+                            <select id="orderStatus">
+                                <option value="pending">Pending</option>
+                                <option value="payment-done">Payment Done</option>
+                                <option value="preparing">Preparing</option>
+                                <option value="out-for-delivery">Out for Delivery</option>
+                                <option value="delivered">Delivered</option>
+                                <option value="rejected">Rejected</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="deliveryETA">Delivery ETA:</label>
+                            <input type="text" id="deliveryETA" placeholder="e.g., 25-35 minutes" value="25-35 minutes">
+                        </div>
+                    </div>
+                    <button id="updateStatusBtn" class="primary-btn">Update Status</button>
+                </div>
+                
+                <div class="admin-notes">
+                    <label for="adminNotes">Admin Notes:</label>
+                    <textarea id="adminNotes" rows="3" placeholder="Add any notes about this order..."></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="notificationToast" class="notification-toast"></div>
+
+    <script src="./script.js"></script>
+    
+    <!-- Test Button for Debugging -->
+    <div style="position: fixed; top: 10px; right: 10px; z-index: 10000;">
+        <button onclick="testDashboard()" style="background: red; color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer;">
+            Test Dashboard
+        </button>
+    </div>
+    
+    <script>
+        function testDashboard() {
+            console.log('Testing dashboard manually...');
+            if (window.adminPanel) {
+                window.adminPanel.showDashboard();
+            } else {
+                console.log('Admin panel not initialized yet');
+            }
+        }
+    </script>
+</body>
+</html>

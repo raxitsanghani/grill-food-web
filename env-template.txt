@@ -1,0 +1,14 @@
+# Admin Panel Environment Variables
+# Copy this file to .env and fill in your values
+
+# MongoDB Connection String
+MONGODB_URI=mongodb://localhost:27017/grilli-restaurant
+
+# JWT Secret Key (Change this to a secure random string in production)
+JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+
+# Admin Server Port
+ADMIN_PORT=4001
+
+# Main Server Port (if different)
+PORT=4000 

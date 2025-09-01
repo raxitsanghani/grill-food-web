@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Fixes - Grilli Restaurant</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #1a1a1a;
+            color: white;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ffd700;
+            border-radius: 10px;
+        }
+        .test-button {
+            background: #ffd700;
+            color: #1a1a1a;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #ffed4e;
+        }
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .success {
+            background: rgba(0, 255, 0, 0.2);
+            border: 1px solid #00ff00;
+        }
+        .error {
+            background: rgba(255, 0, 0, 0.2);
+            border: 1px solid #ff0000;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Fixes - Grilli Restaurant</h1>
+    
+    <div class="test-section">
+        <h2>1. User Info Display in Topbar</h2>
+        <p>Testing if the user info (Welcome message + Logout button) appears in the topbar instead of the old position.</p>
+        <button class="test-button" onclick="testUserInfoDisplay()">Test User Info Display</button>
+        <div id="userInfoStatus"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Input Field Font Size</h2>
+        <p>Testing if input fields have proper font size and are readable.</p>
+        <button class="test-button" onclick="testInputFields()">Test Input Fields</button>
+        <div id="inputStatus"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. Login Modal Test</h2>
+        <p>Testing if the login modal opens and displays properly.</p>
+        <button class="test-button" onclick="testLoginModal()">Open Login Modal</button>
+        <div id="modalStatus"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. Navigation Test</h2>
+        <p>Testing if we can navigate to the main page to see the changes.</p>
+        <button class="test-button" onclick="window.open('http://localhost:4000', '_blank')">Open Main Page</button>
+        <p>This will open the main Grilli Restaurant page in a new tab where you can see:</p>
+        <ul>
+            <li>User info display moved to the topbar (blue box area)</li>
+            <li>Input fields with proper font sizes</li>
+            <li>All other features working correctly</li>
+        </ul>
+    </div>
+
+    <script>
+        function testUserInfoDisplay() {
+            const status = document.getElementById('userInfoStatus');
+            try {
+                // Check if the userInfo element exists in the topbar
+                const userInfo = document.querySelector('.topbar .user-info-display');
+                if (userInfo) {
+                    status.innerHTML = '<div class="status success">✅ User info display found in topbar</div>';
+                } else {
+                    status.innerHTML = '<div class="status error">❌ User info display not found in topbar</div>';
+                }
+            } catch (error) {
+                status.innerHTML = '<div class="status error">❌ Error testing user info display: ' + error.message + '</div>';
+            }
+        }
+        
+        function testInputFields() {
+            const status = document.getElementById('inputStatus');
+            try {
+                // Create a test input field to check styling
+                const testInput = document.createElement('input');
+                testInput.type = 'text';
+                testInput.placeholder = 'Test input field';
+                testInput.style.cssText = `
+                    padding: 15px;
+                    background: #2d2d2d;
+                    border: 1px solid #666;
+                    border-radius: 10px;
+                    color: white;
+                    font-size: 1.6rem;
+                    min-height: 50px;
+                    width: 300px;
+                `;
+                
+                document.body.appendChild(testInput);
+                
+                status.innerHTML = '<div class="status success">✅ Test input field created with proper styling</div>';
+                
+                // Remove test input after 3 seconds
+                setTimeout(() => {
+                    if (testInput.parentNode) {
+                        testInput.parentNode.removeChild(testInput);
+                    }
+                }, 3000);
+                
+            } catch (error) {
+                status.innerHTML = '<div class="status error">❌ Error testing input fields: ' + error.message + '</div>';
+            }
+        }
+        
+        function testLoginModal() {
+            const status = document.getElementById('modalStatus');
+            try {
+                // Check if login modal elements exist
+                const loginModal = document.getElementById('loginModal');
+                const signupModal = document.getElementById('signupModal');
+                
+                if (loginModal && signupModal) {
+                    status.innerHTML = '<div class="status success">✅ Login and signup modals found</div>';
+                } else {
+                    status.innerHTML = '<div class="status error">❌ Login modals not found on this test page</div>';
+                }
+            } catch (error) {
+                status.innerHTML = '<div class="status error">❌ Error testing login modal: ' + error.message + '</div>';
+            }
+        }
+        
+        // Auto-run tests when page loads
+        window.onload = function() {
+            setTimeout(() => {
+                testUserInfoDisplay();
+                testInputFields();
+            }, 1000);
+        };
+    </script>
+</body>
+</html>

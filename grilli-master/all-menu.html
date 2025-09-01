@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>All Menu - Grilli Restaurant</title>
+
+  <!-- 
+    - favicon
+  -->
+  <link rel="shortcut icon" href="./assets/images/favicon.png" type="image/svg+xml">
+
+  <!-- 
+    - custom css link
+  -->
+  <link rel="stylesheet" href="./assets/css/style.css">
+
+  <!-- 
+    - google font link
+  -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    .all-menu-header {
+      background: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)), url('./assets/images/hero-bg.jpg');
+      background-size: cover;
+      background-position: center;
+      padding: 100px 0 50px;
+      text-align: center;
+      color: white;
+    }
+
+    /* Ensure page is scrollable */
+    html, body {
+      height: auto;
+      overflow-y: auto;
+    }
+
+    .all-menu-header h1 {
+      font-size: 3rem;
+      margin-bottom: 20px;
+      color: #ffd700;
+    }
+
+    .all-menu-header p {
+      font-size: 1.2rem;
+      margin-bottom: 30px;
+    }
+
+    .back-btn {
+      background: #ffd700;
+      color: #000;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      text-decoration: none;
+      display: inline-block;
+      margin-bottom: 30px;
+      transition: all 0.3s ease;
+    }
+
+    .back-btn:hover {
+      background: #ffed4e;
+      transform: translateY(-2px);
+    }
+
+    .menu-filters {
+      background: #1a1a1a;
+      padding: 20px 0;
+      text-align: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .menu-filters .container {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .filter-btn {
+      background: transparent;
+      color: #fff;
+      border: 2px solid #ffd700;
+      padding: 10px 20px;
+      margin: 0;
+      border-radius: 25px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      white-space: nowrap;
+    }
+
+    .filter-btn.active,
+    .filter-btn:hover {
+      background: #ffd700;
+      color: #000;
+    }
+
+    .all-menu-section {
+      padding: 24px 0 80px;
+      background: #0a0a0a;
+    }
+
+    .all-menu-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 30px;
+      margin-top: 20px;
+    }
+
+    @media (max-width: 1024px) {
+      .all-menu-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 640px) {
+      .all-menu-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .all-menu-card {
+      background: #1a1a1a;
+      border-radius: 15px;
+      overflow: hidden;
+      border: 2px solid #ffd700;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .all-menu-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(255, 215, 0, 0.3);
+    }
+
+    .all-menu-card img {
+      width: 100%;
+      height: 250px;
+      object-fit: cover;
+    }
+
+    .all-menu-card-content {
+      padding: 20px;
+    }
+
+    .all-menu-card-title {
+      font-size: 1.5rem;
+      color: #ffd700;
+      margin-bottom: 10px;
+    }
+
+    .all-menu-card-description {
+      color: #ccc;
+      margin-bottom: 15px;
+      line-height: 1.6;
+    }
+
+    .all-menu-card-price {
+      font-size: 1.3rem;
+      color: #4caf50;
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+
+    .all-menu-card-badge {
+      background: #ffd700;
+      color: #000;
+      padding: 5px 10px;
+      border-radius: 15px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      display: inline-block;
+      margin-bottom: 15px;
+    }
+
+    .all-menu-card-type {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .type-indicator {
+      font-size: 1.2rem;
+    }
+
+    .all-order-btn {
+      background: #ffd700;
+      color: #000;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      width: 100%;
+      transition: all 0.3s ease;
+    }
+
+    .all-order-btn:hover {
+      background: #ffed4e;
+      transform: translateY(-2px);
+    }
+
+    .loading {
+      text-align: center;
+      padding: 50px;
+      color: #ffd700;
+      font-size: 1.2rem;
+    }
+
+    .no-items {
+      text-align: center;
+      padding: 50px;
+      color: #ccc;
+      font-size: 1.2rem;
+    }
+
+    .menu-stats {
+      background: #1a1a1a;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 30px;
+      text-align: center;
+      border: 1px solid #ffd700;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+    }
+
+    .stat-item {
+      color: #ffd700;
+    }
+
+    .stat-number {
+      font-size: 2rem;
+      font-weight: bold;
+      display: block;
+    }
+
+    .stat-label {
+      font-size: 0.9rem;
+      color: #ccc;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- 
+    - #HEADER
+  -->
+
+  <header class="header" data-header>
+    <div class="container">
+
+      <a href="index.html" class="logo">
+        <img src="./assets/images/logo.svg" width="160" height="50" alt="Grilli - Home">
+      </a>
+
+      <nav class="navbar" data-navbar>
+
+        <div class="navbar-top">
+
+          <a href="index.html" class="logo">Grilli</a>
+
+          <button class="nav-close-btn" aria-label="Close menu" data-nav-toggler>
+            <ion-icon name="close-outline" aria-hidden="true"></ion-icon>
+          </button>
+
+        </div>
+
+        <ul class="navbar-list">
+
+          <li class="navbar-item">
+            <a href="index.html" class="navbar-link hover-1">Home</a>
+          </li>
+
+          <li class="navbar-item">
+            <a href="all-menu.html" class="navbar-link hover-1">Menu</a>
+          </li>
+
+          <li class="navbar-item">
+            <a href="index.html#about" class="navbar-link hover-1">About Us</a>
+          </li>
+
+          <li class="navbar-item">
+            <a href="index.html#contact" class="navbar-link hover-1">Contact</a>
+          </li>
+
+        </ul>
+
+      </nav>
+
+      <div class="header-actions">
+        <a href="index.html" class="back-btn" style="margin:0;">
+          <ion-icon name="arrow-back-outline" aria-hidden="true"></ion-icon>
+          Back to Home
+        </a>
+
+        <button class="search-btn" aria-label="Search" data-search-toggler>
+          <ion-icon name="search-outline" aria-hidden="true"></ion-icon>
+        </button>
+
+        <button class="header-action-btn" aria-label="Profile" data-panel-btn="profile">
+          <ion-icon name="person-outline" aria-hidden="true"></ion-icon>
+        </button>
+
+        <button class="header-action-btn" aria-label="Cart" data-panel-btn="cart">
+          <ion-icon name="bag-outline" aria-hidden="true"></ion-icon>
+          <span class="btn-badge">0</span>
+        </button>
+
+        <button class="header-action-btn" aria-label="Menu" data-nav-toggler>
+          <ion-icon name="menu-outline" aria-hidden="true"></ion-icon>
+        </button>
+      </div>
+
+      <div class="overlay" data-nav-toggler data-overlay></div>
+
+    </div>
+  </header>
+
+  <!-- All Menu Header -->
+  <section class="all-menu-header">
+    <div class="container">
+      
+      <h1>Complete Menu</h1>
+      <p>Explore our full selection of delicious dishes</p>
+      
+      <div class="menu-stats">
+        <div class="stats-grid">
+          <div class="stat-item">
+            <span class="stat-number" id="totalItems">0</span>
+            <span class="stat-label">Total Items</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number" id="vegItems">0</span>
+            <span class="stat-label">Vegetarian</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number" id="nonVegItems">0</span>
+            <span class="stat-label">Non-Vegetarian</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Menu Filters -->
+  <section class="menu-filters">
+    <div class="container">
+      <button class="filter-btn active" data-filter="all">All Items</button>
+      <button class="filter-btn" data-filter="veg">Vegetarian</button>
+      <button class="filter-btn" data-filter="non-veg">Non-Vegetarian</button>
+      <button class="filter-btn" data-filter="main-course">Main Course</button>
+      <button class="filter-btn" data-filter="pizza">Pizza</button>
+      <button class="filter-btn" data-filter="pasta">Pasta</button>
+      <button class="filter-btn" data-filter="salads">Salads</button>
+      <button class="filter-btn" data-filter="rice">Rice</button>
+    </div>
+  </section>
+
+  <!-- All Menu Section -->
+  <section class="all-menu-section">
+    <div class="container">
+      <div class="loading" id="loadingMessage">Loading menu items...</div>
+      <div class="no-items" id="noItemsMessage" style="display: none;">No menu items found</div>
+      <div class="all-menu-grid" id="allMenuGrid">
+        <!-- Menu items will be loaded here -->
+      </div>
+    </div>
+  </section>
+
+  <!-- 
+    - #FOOTER
+  -->
+
+  <footer class="footer" style="background-image: url('./assets/images/footer-bg.jpg')">
+    <div class="footer-top">
+      <div class="container">
+
+        <div class="footer-brand">
+
+          <div class="footer-logo">
+            <img src="./assets/images/logo.svg" width="160" height="50" alt="Grilli - Home">
+          </div>
+
+          <p class="footer-text">
+            Indulge in culinary excellence at Grilli Restaurant, where every dish tells a story of passion and
+            tradition.
+          </p>
+
+          <div class="wrapper">
+            <div class="contact-item">
+              <div class="contact-icon">
+                <ion-icon name="location-outline" aria-hidden="true"></ion-icon>
+              </div>
+
+              <div class="contact-info">
+                <p class="contact-label">Our Location</p>
+
+                <address class="contact-link">
+                  MES College, 15th Cross Rd, Malleshwaram, Bengaluru, Karnataka 560003
+                </address>
+              </div>
+            </div>
+
+            <div class="contact-item">
+              <div class="contact-icon">
+                <ion-icon name="time-outline" aria-hidden="true"></ion-icon>
+              </div>
+
+              <div class="contact-info">
+                <p class="contact-label">Open Monday-Friday</p>
+
+                <p class="contact-link">09:00 am - 10:00 pm</p>
+              </div>
+            </div>
+
+            <div class="contact-item">
+              <div class="contact-icon">
+                <ion-icon name="call-outline" aria-hidden="true"></ion-icon>
+              </div>
+
+              <div class="contact-info">
+                <p class="contact-label">Call Us</p>
+
+                <a href="tel:+919510261149" class="contact-link">+91 9510261149</a>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+        <div class="footer-link-box">
+
+          <div class="footer-list">
+
+            <p class="footer-list-title">About Us</p>
+
+            <ul>
+
+              <li>
+                <a href="#" class="footer-link hover-1">About Grilli</a>
+              </li>
+
+              <li>
+                <a href="#" class="footer-link hover-1">Our Chefs</a>
+              </li>
+
+              <li>
+                <a href="#" class="footer-link hover-1">Careers</a>
+              </li>
+
+              <li>
+                <a href="#" class="footer-link hover-1">Contact Us</a>
+              </li>
+
+            </ul>
+
+          </div>
+
+          <div class="footer-list">
+
+            <p class="footer-list-title">Services</p>
+
+            <ul>
+
+              <li>
+                <a href="#" class="footer-link hover-1">Online Ordering</a>
+              </li>
+
+              <li>
+                <a href="#" class="footer-link hover-1">Catering</a>
+              </li>
+
+              <li>
+                <a href="#" class="footer-link hover-1">Delivery</a>
+              </li>
+
+              <li>
+                <a href="#" class="footer-link hover-1">Reservations</a>
+              </li>
+
+            </ul>
+
+          </div>
+
+          <div class="footer-list">
+
+            <p class="footer-list-title">Support</p>
+
+            <ul>
+
+              <li>
+                <a href="#" class="footer-link hover-1">Help Center</a>
+              </li>
+
+              <li>
+                <a href="#" class="footer-link hover-1">Privacy Policy</a>
+              </li>
+
+              <li>
+                <a href="#" class="footer-link hover-1">Terms of Service</a>
+              </li>
+
+              <li>
+                <a href="#" class="footer-link hover-1">Refund Policy</a>
+              </li>
+
+            </ul>
+
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <div class="container">
+
+        <p class="copyright">
+          Copyright 2024 <a href="#">Grilli Restaurant</a>. All Rights Reserved.
+        </p>
+
+      </div>
+    </div>
+  </footer>
+
+  <!-- 
+    - #BACK TO TOP
+  -->
+
+  <a href="#top" class="back-top-btn" aria-label="Back to top" data-back-top-btn>
+    <ion-icon name="chevron-up" aria-hidden="true"></ion-icon>
+  </a>
+
+  <!-- 
+    - custom js link
+  -->
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script src="./assets/js/script.js"></script>
+
+  <!-- 
+    - ionicon link
+  -->
+  <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+  <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+
+  <!-- 
+    - login system js
+  -->
+  <script src="./assets/js/login.js"></script>
+
+  <!-- 
+    - ordering system js
+  -->
+  <script src="./assets/js/ordering-system.js"></script>
+
+  <!-- All Menu System -->
+  <script>
+    class AllMenuSystem {
+      constructor() {
+        this.menuItems = [];
+        this.filteredItems = [];
+        this.currentFilter = 'all';
+        this.apiBaseUrl = 'http://localhost:4000/api';
+        this.socket = null;
+        this.init();
+      }
+
+      async init() {
+        await this.loadMenuItems();
+        this.setupEventListeners();
+        this.initializeSocket();
+        this.updateStats();
+      }
+
+      async loadMenuItems() {
+        try {
+          const response = await fetch(`${this.apiBaseUrl}/menu-items`);
+          if (response.ok) {
+            const items = await response.json();
+            this.menuItems = this.dedupeItems(items);
+            this.filteredItems = [...this.menuItems];
+            this.displayMenuItems();
+            this.updateStats();
+          } else {
+            console.error('Failed to load menu items');
+            this.showMessage('Failed to load menu items', 'error');
+          }
+        } catch (error) {
+          console.error('Error loading menu items:', error);
+          this.showMessage('Error loading menu items', 'error');
+        }
+      }
+
+      displayMenuItems() {
+        const menuGrid = document.getElementById('allMenuGrid');
+        const loadingMessage = document.getElementById('loadingMessage');
+        const noItemsMessage = document.getElementById('noItemsMessage');
+
+        if (this.filteredItems.length === 0) {
+          loadingMessage.style.display = 'none';
+          noItemsMessage.style.display = 'block';
+          menuGrid.innerHTML = '';
+          return;
+        }
+
+        loadingMessage.style.display = 'none';
+        noItemsMessage.style.display = 'none';
+
+        const itemsToRender = this.dedupeItems(this.filteredItems);
+        menuGrid.innerHTML = itemsToRender.map(item => `
+          <div class="all-menu-card" data-item-id="${item._id}" data-category="${item.category}" data-type="${item.type}">
+            <img src="${item.image}" alt="${item.name}" onerror="this.src='./assets/images/menu-1.png'">
+            <div class="all-menu-card-content">
+              <h3 class="all-menu-card-title">${item.name}</h3>
+              <p class="all-menu-card-description">${item.description}</p>
+              <div class="all-menu-card-type">
+                <span class="type-indicator">${item.type === 'veg' ? '🌱' : '🍖'}</span>
+                <span>${item.type === 'veg' ? 'Vegetarian' : 'Non-Vegetarian'}</span>
+              </div>
+              ${item.badge ? `<span class="all-menu-card-badge">${item.badge}</span>` : ''}
+              <div class="all-menu-card-price">₹${item.price.toFixed(2)}</div>
+              <button class="all-order-btn" onclick="allMenuSystem.orderItem('${item._id}')">
+                Order Now
+              </button>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      filterItems(filter) {
+        this.currentFilter = filter;
+        
+        if (filter === 'all') {
+          this.filteredItems = [...this.menuItems];
+        } else if (filter === 'veg') {
+          this.filteredItems = this.menuItems.filter(item => item.type === 'veg');
+        } else if (filter === 'non-veg') {
+          this.filteredItems = this.menuItems.filter(item => item.type === 'non-veg');
+        } else {
+          this.filteredItems = this.menuItems.filter(item => item.category === filter);
+        }
+
+        this.displayMenuItems();
+        this.updateFilterButtons();
+      }
+
+      updateFilterButtons() {
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        filterButtons.forEach(btn => {
+          btn.classList.remove('active');
+          if (btn.dataset.filter === this.currentFilter) {
+            btn.classList.add('active');
+          }
+        });
+      }
+
+      updateStats() {
+        const uniqueItems = this.dedupeItems(this.menuItems);
+        const totalItems = uniqueItems.length;
+        const vegItems = uniqueItems.filter(item => item.type === 'veg').length;
+        const nonVegItems = uniqueItems.filter(item => item.type === 'non-veg').length;
+
+        document.getElementById('totalItems').textContent = totalItems;
+        document.getElementById('vegItems').textContent = vegItems;
+        document.getElementById('nonVegItems').textContent = nonVegItems;
+      }
+
+      setupEventListeners() {
+        // Filter buttons
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        filterButtons.forEach(btn => {
+          btn.addEventListener('click', () => {
+            this.filterItems(btn.dataset.filter);
+          });
+        });
+      }
+
+      initializeSocket() {
+        this.socket = io('http://localhost:4000');
+        
+        this.socket.on('connect', () => {
+          console.log('Connected to server for all menu updates');
+        });
+
+        this.socket.on('menu-updated', (data) => {
+          console.log('Received menu update:', data);
+          this.handleMenuUpdate(data);
+        });
+      }
+
+      handleMenuUpdate(data) {
+        const { action, item, itemId } = data;
+        
+        switch (action) {
+          case 'item-added': {
+            if (!item || !item._id) break;
+            const existingIndex = this.menuItems.findIndex(m => m._id === item._id);
+            if (existingIndex === -1) {
+              this.menuItems.unshift(item);
+            } else {
+              this.menuItems[existingIndex] = item;
+            }
+            this.menuItems = this.dedupeItems(this.menuItems);
+            this.filteredItems = [...this.menuItems];
+            this.displayMenuItems();
+            this.updateStats();
+            this.showMessage('New item added!', 'success');
+            break;
+          }
+          case 'item-updated': {
+            const updateIndex = this.menuItems.findIndex(m => m._id === item._id);
+            if (updateIndex !== -1) {
+              this.menuItems[updateIndex] = item;
+              this.menuItems = this.dedupeItems(this.menuItems);
+              this.filteredItems = [...this.menuItems];
+              this.displayMenuItems();
+              this.updateStats();
+              this.showMessage('Item updated!', 'success');
+            }
+            break;
+          }
+          case 'item-deleted': {
+            this.menuItems = this.menuItems.filter(m => m._id !== itemId);
+            this.filteredItems = [...this.menuItems];
+            this.displayMenuItems();
+            this.updateStats();
+            this.showMessage('Item removed!', 'info');
+            break;
+          }
+        }
+      }
+
+      orderItem(itemId) {
+        if (window.orderingSystem) {
+          window.orderingSystem.showOrderModal(itemId);
+        } else {
+          this.showMessage('Ordering system not available', 'error');
+        }
+      }
+
+      showMessage(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `notification notification-${type}`;
+        notification.textContent = message;
+        
+        notification.style.cssText = `
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          background: ${type === 'success' ? '#4caf50' : type === 'error' ? '#f44336' : type === 'warning' ? '#ff9800' : '#2196f3'};
+          color: white;
+          padding: 12px 16px;
+          border-radius: 8px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+          z-index: 10000;
+          max-width: 300px;
+          font-size: 14px;
+          transform: translateX(400px);
+          transition: transform 0.3s ease;
+        `;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+          notification.style.transform = 'translateX(0)';
+        }, 100);
+        
+        setTimeout(() => {
+          notification.style.transform = 'translateX(400px)';
+          setTimeout(() => {
+            if (document.body.contains(notification)) {
+              document.body.removeChild(notification);
+            }
+          }, 300);
+        }, 4000);
+      }
+
+      dedupeItems(items) {
+        const seen = new Set();
+        return (items || []).filter(it => {
+          if (!it || !it._id) return false;
+          if (seen.has(it._id)) return false;
+          seen.add(it._id);
+          return true;
+        });
+      }
+    }
+
+    // Initialize all menu system when DOM is loaded
+    document.addEventListener('DOMContentLoaded', () => {
+      window.allMenuSystem = new AllMenuSystem();
+    });
+  </script>
+
+</body>
+
+</html>
+
+

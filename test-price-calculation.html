@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Price Calculation Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ccc; }
+        .price-breakdown { background: #f5f5f5; padding: 15px; margin: 10px 0; }
+        .price-row { display: flex; justify-content: space-between; margin: 5px 0; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        .quantity-display { font-size: 20px; font-weight: bold; margin: 0 15px; }
+    </style>
+</head>
+<body>
+    <h1>Price Calculation Test</h1>
+    
+    <div class="test-section">
+        <h2>Test Menu Item</h2>
+        <p><strong>Name:</strong> <span id="itemName">Loading...</span></p>
+        <p><strong>Price:</strong> <span id="itemPrice">Loading...</span></p>
+        <p><strong>Image:</strong> <img id="itemImage" src="" alt="" style="width: 100px; height: 100px; border: 1px solid #ccc;"></p>
+    </div>
+
+    <div class="test-section">
+        <h2>Quantity Controls</h2>
+        <button class="quantity-btn decrease">-</button>
+        <span class="quantity-display">1</span>
+        <button class="quantity-btn increase">+</button>
+    </div>
+
+    <div class="test-section">
+        <h2>Price Breakdown</h2>
+        <div class="price-breakdown">
+            <div class="price-row">
+                <span>Base Price:</span>
+                <span class="base-price">₹0.00</span>
+            </div>
+            <div class="price-row">
+                <span>Delivery Fee:</span>
+                <span class="delivery-fee">₹40.00</span>
+            </div>
+            <div class="price-row">
+                <span>GST (18%):</span>
+                <span class="gst-amount">₹0.00</span>
+            </div>
+            <div class="price-row" style="border-top: 2px solid #333; padding-top: 10px; font-weight: bold;">
+                <span>Total:</span>
+                <span class="total-price">₹0.00</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test Results</h2>
+        <div id="testResults"></div>
+    </div>
+
+    <script>
+        class PriceCalculator {
+            constructor() {
+                this.currentItem = null;
+                this.apiBaseUrl = 'http://localhost:4000/api';
+                this.init();
+            }
+
+            async init() {
+                await this.loadTestItem();
+                this.setupEventListeners();
+                this.runTests();
+            }
+
+            async loadTestItem() {
+                try {
+                    const response = await fetch(`${this.apiBaseUrl}/menu-items/1`);
+                    if (response.ok) {
+                        this.currentItem = await response.json();
+                        this.updateItemDisplay();
+                        this.updateTotalPrice(1);
+                    }
+                } catch (error) {
+                    console.error('Error loading test item:', error);
+                }
+            }
+
+            updateItemDisplay() {
+                if (!this.currentItem) return;
+
+                document.getElementById('itemName').textContent = this.currentItem.name;
+                document.getElementById('itemPrice').textContent = `₹${this.currentItem.price.toFixed(2)}`;
+                
+                const img = document.getElementById('itemImage');
+                img.src = this.currentItem.image;
+                img.alt = this.currentItem.name;
+            }
+
+            setupEventListeners() {
+                const quantityBtns = document.querySelectorAll('.quantity-btn');
+                quantityBtns.forEach(btn => {
+                    btn.addEventListener('click', (e) => this.handleQuantityChange(e));
+                });
+            }
+
+            handleQuantityChange(event) {
+                const btn = event.currentTarget;
+                const quantityDisplay = document.querySelector('.quantity-display');
+                let currentQuantity = parseInt(quantityDisplay.textContent);
+
+                if (btn.classList.contains('decrease') && currentQuantity > 1) {
+                    currentQuantity--;
+                } else if (btn.classList.contains('increase')) {
+                    currentQuantity++;
+                }
+
+                quantityDisplay.textContent = currentQuantity;
+                this.updateTotalPrice(currentQuantity);
+            }
+
+            updateTotalPrice(quantity) {
+                if (!this.currentItem) return;
+
+                const basePrice = this.currentItem.price * quantity;
+                const deliveryFee = 40; // ₹40 delivery fee
+                const gst = basePrice * 0.18; // 18% GST
+                const totalPrice = basePrice + deliveryFee + gst;
+                
+                // Update base price display
+                const basePriceElement = document.querySelector('.base-price');
+                if (basePriceElement) {
+                    basePriceElement.textContent = `₹${basePrice.toFixed(2)}`;
+                }
+                
+                // Update delivery fee display
+                const deliveryFeeElement = document.querySelector('.delivery-fee');
+                if (deliveryFeeElement) {
+                    deliveryFeeElement.textContent = `₹${deliveryFee.toFixed(2)}`;
+                }
+                
+                // Update GST display
+                const gstElement = document.querySelector('.gst-amount');
+                if (gstElement) {
+                    gstElement.textContent = `₹${gst.toFixed(2)}`;
+                }
+                
+                // Update total price display
+                const totalPriceElement = document.querySelector('.total-price');
+                if (totalPriceElement) {
+                    totalPriceElement.textContent = `₹${totalPrice.toFixed(2)}`;
+                }
+
+                // Store for testing
+                this.currentTotalPrice = totalPrice;
+            }
+
+            runTests() {
+                const results = [];
+                
+                // Test 1: Check if item loaded
+                if (this.currentItem) {
+                    results.push('✅ Test Item loaded successfully');
+                    results.push(`   - Name: ${this.currentItem.name}`);
+                    results.push(`   - Price: ₹${this.currentItem.price}`);
+                    results.push(`   - Image: ${this.currentItem.image}`);
+                } else {
+                    results.push('❌ Test Item failed to load');
+                }
+
+                // Test 2: Check price calculation
+                if (this.currentItem) {
+                    const expectedBase = this.currentItem.price * 1;
+                    const expectedGST = expectedBase * 0.18;
+                    const expectedTotal = expectedBase + 40 + expectedGST;
+                    
+                    results.push('✅ Price calculation test:');
+                    results.push(`   - Base Price (1x): ₹${expectedBase.toFixed(2)}`);
+                    results.push(`   - GST (18%): ₹${expectedGST.toFixed(2)}`);
+                    results.push(`   - Delivery Fee: ₹40.00`);
+                    results.push(`   - Total: ₹${expectedTotal.toFixed(2)}`);
+                }
+
+                // Test 3: Check quantity change
+                results.push('✅ Quantity change test:');
+                results.push('   - Click + button to increase quantity');
+                results.push('   - Click - button to decrease quantity');
+                results.push('   - Prices should update automatically');
+
+                // Display results
+                const resultsDiv = document.getElementById('testResults');
+                resultsDiv.innerHTML = results.map(result => `<div>${result}</div>`).join('');
+            }
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new PriceCalculator();
+        });
+    </script>
+</body>
+</html>

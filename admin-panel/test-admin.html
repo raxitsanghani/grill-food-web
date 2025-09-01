@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ccc; }
+        .success { color: green; }
+        .error { color: red; }
+        button { padding: 10px 20px; margin: 5px; }
+        input { padding: 8px; margin: 5px; width: 200px; }
+    </style>
+</head>
+<body>
+    <h1>Admin Panel Test</h1>
+    
+    <div class="test-section">
+        <h2>1. Test Admin Account Creation</h2>
+        <input type="text" id="testFullName" placeholder="Full Name" value="Test Admin">
+        <input type="email" id="testEmail" placeholder="Email" value="test@admin.com">
+        <input type="tel" id="testPhone" placeholder="Phone" value="1234567890">
+        <input type="password" id="testPassword" placeholder="Password" value="test123">
+        <input type="text" id="testSecurityKey" placeholder="Security Key" value="123456">
+        <button onclick="testAccountCreation()">Test Account Creation</button>
+        <div id="accountResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Test Admin Login</h2>
+        <input type="email" id="testLoginEmail" placeholder="Email" value="test@admin.com">
+        <input type="password" id="testLoginPassword" placeholder="Password" value="test123">
+        <input type="text" id="testLoginSecurityKey" placeholder="Security Key" value="123456">
+        <button onclick="testLogin()">Test Login</button>
+        <div id="loginResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. Test Menu Item Creation</h2>
+        <input type="text" id="testItemName" placeholder="Item Name" value="Test Item">
+        <select id="testItemType">
+            <option value="veg">Vegetarian</option>
+            <option value="non-veg">Non-Vegetarian</option>
+        </select>
+        <input type="number" id="testItemPrice" placeholder="Price" value="299">
+        <input type="text" id="testItemDescription" placeholder="Description" value="Test description">
+        <input type="url" id="testItemImage" placeholder="Image URL" value="https://via.placeholder.com/150">
+        <button onclick="testMenuItemCreation()">Test Menu Item Creation</button>
+        <div id="menuItemResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. Test Order Status Update</h2>
+        <input type="text" id="testOrderId" placeholder="Order ID">
+        <select id="testOrderStatus">
+            <option value="pending">Pending</option>
+            <option value="preparing">Preparing</option>
+            <option value="delivered">Delivered</option>
+        </select>
+        <button onclick="testOrderStatusUpdate()">Test Order Status Update</button>
+        <div id="orderResult"></div>
+    </div>
+
+    <script>
+        let adminToken = null;
+        
+        async function testAccountCreation() {
+            const resultDiv = document.getElementById('accountResult');
+            try {
+                const response = await fetch('http://localhost:4001/api/admin/setup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        fullName: document.getElementById('testFullName').value,
+                        email: document.getElementById('testEmail').value,
+                        phone: document.getElementById('testPhone').value,
+                        password: document.getElementById('testPassword').value,
+                        securityKey: document.getElementById('testSecurityKey').value
+                    })
+                });
+                
+                const data = await response.json();
+                if (response.ok) {
+                    adminToken = data.token;
+                    resultDiv.innerHTML = `<span class="success">✅ Account created successfully! Token: ${data.token.substring(0, 20)}...</span>`;
+                } else {
+                    resultDiv.innerHTML = `<span class="error">❌ Failed: ${data.error}</span>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">❌ Error: ${error.message}</span>`;
+            }
+        }
+        
+        async function testLogin() {
+            const resultDiv = document.getElementById('loginResult');
+            try {
+                const response = await fetch('http://localhost:4001/api/admin/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: document.getElementById('testLoginEmail').value,
+                        password: document.getElementById('testLoginPassword').value,
+                        securityKey: document.getElementById('testLoginSecurityKey').value
+                    })
+                });
+                
+                const data = await response.json();
+                if (response.ok) {
+                    adminToken = data.token;
+                    resultDiv.innerHTML = `<span class="success">✅ Login successful! Token: ${data.token.substring(0, 20)}...</span>`;
+                } else {
+                    resultDiv.innerHTML = `<span class="error">❌ Failed: ${data.error}</span>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">❌ Error: ${error.message}</span>`;
+            }
+        }
+        
+        async function testMenuItemCreation() {
+            const resultDiv = document.getElementById('menuItemResult');
+            if (!adminToken) {
+                resultDiv.innerHTML = `<span class="error">❌ Please login first</span>`;
+                return;
+            }
+            
+            try {
+                const response = await fetch('http://localhost:4001/api/admin/menu-items', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${adminToken}`
+                    },
+                    body: JSON.stringify({
+                        name: document.getElementById('testItemName').value,
+                        type: document.getElementById('testItemType').value,
+                        price: parseFloat(document.getElementById('testItemPrice').value),
+                        description: document.getElementById('testItemDescription').value,
+                        image: document.getElementById('testItemImage').value
+                    })
+                });
+                
+                const data = await response.json();
+                if (response.ok) {
+                    resultDiv.innerHTML = `<span class="success">✅ Menu item created successfully! ID: ${data._id}</span>`;
+                } else {
+                    resultDiv.innerHTML = `<span class="error">❌ Failed: ${data.error}</span>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">❌ Error: ${error.message}</span>`;
+            }
+        }
+        
+        async function testOrderStatusUpdate() {
+            const resultDiv = document.getElementById('orderResult');
+            if (!adminToken) {
+                resultDiv.innerHTML = `<span class="error">❌ Please login first</span>`;
+                return;
+            }
+            
+            const orderId = document.getElementById('testOrderId').value;
+            if (!orderId) {
+                resultDiv.innerHTML = `<span class="error">❌ Please enter an order ID</span>`;
+                return;
+            }
+            
+            try {
+                const response = await fetch(`http://localhost:4001/api/admin/orders/${orderId}/status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${adminToken}`
+                    },
+                    body: JSON.stringify({
+                        status: document.getElementById('testOrderStatus').value,
+                        adminNotes: 'Test update'
+                    })
+                });
+                
+                const data = await response.json();
+                if (response.ok) {
+                    resultDiv.innerHTML = `<span class="success">✅ Order status updated successfully!</span>`;
+                } else {
+                    resultDiv.innerHTML = `<span class="error">❌ Failed: ${data.error}</span>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">❌ Error: ${error.message}</span>`;
+            }
+        }
+    </script>
+</body>
+</html>
