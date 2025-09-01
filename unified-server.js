@@ -30,7 +30,11 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Serve static files
 app.use(express.static(path.join(__dirname, 'grilli-master')));
-app.use('/admin', express.static(path.join(__dirname, 'admin-panel')));
+
+// Serve admin panel static files with proper path handling
+app.use('/admin', express.static(path.join(__dirname, 'admin-panel'), {
+    index: false // Don't serve index.html automatically
+}));
 
 // Authentication Middleware for Admin Routes
 const authenticateAdmin = async (req, res, next) => {
@@ -235,11 +239,19 @@ app.get('/api/users/orders', async (req, res) => {
 
 // Serve admin panel
 app.get('/admin', (req, res) => {
+    console.log('Admin panel requested:', req.path);
     res.sendFile(path.join(__dirname, 'admin-panel', 'index.html'));
 });
 
 app.get('/admin/dashboard', (req, res) => {
+    console.log('Admin dashboard requested:', req.path);
     res.sendFile(path.join(__dirname, 'admin-panel', 'dashboard.html'));
+});
+
+// Handle admin panel sub-routes
+app.get('/admin/*', (req, res) => {
+    console.log('Admin sub-route requested:', req.path);
+    res.sendFile(path.join(__dirname, 'admin-panel', 'index.html'));
 });
 
 // Admin setup and authentication
@@ -545,15 +557,16 @@ app.use((error, req, res, next) => {
     res.status(500).json({ error: 'Internal server error: ' + error.message });
 });
 
-// Catch-all handler for frontend routes
+// Catch-all handler for frontend routes (only for non-admin, non-API routes)
 app.get('*', (req, res) => {
-    // If it's an admin route, serve admin panel
-    if (req.path.startsWith('/admin')) {
-        res.sendFile(path.join(__dirname, 'admin-panel', 'index.html'));
-    } else {
-        // Otherwise serve user frontend
-        res.sendFile(path.join(__dirname, 'grilli-master', 'index.html'));
+    // Skip if it's an admin route or API route
+    if (req.path.startsWith('/admin') || req.path.startsWith('/api')) {
+        return res.status(404).json({ error: 'Route not found' });
     }
+    
+    // Otherwise serve user frontend
+    console.log('Serving user frontend for:', req.path);
+    res.sendFile(path.join(__dirname, 'grilli-master', 'index.html'));
 });
 
 // Start server
