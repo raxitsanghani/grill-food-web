@@ -267,7 +267,7 @@ class OrdersPage {
 
   initializeSocket() {
     // Connect to the user server for real-time updates
-    this.socket = io('http://localhost:4000');
+    this.socket = io();
     
     this.socket.on('connect', () => {
       console.log('Connected to user server for real-time updates');

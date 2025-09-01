@@ -77,7 +77,8 @@ class AdminDashboard {
     }
 
     initializeSocket() {
-        this.socket = io('http://localhost:4001');
+        // Use the same port as the unified server
+        this.socket = io();
         
         this.socket.on('connect', () => {
             console.log('Connected to admin server');
@@ -117,7 +118,7 @@ class AdminDashboard {
 
     async loadAdminInfo() {
         try {
-            const response = await fetch('http://localhost:4001/api/admin/profile', {
+            const response = await fetch('/api/admin/profile', {
                 headers: {
                     'Authorization': `Bearer ${this.adminToken}`
                 }
@@ -141,7 +142,7 @@ class AdminDashboard {
 
     async loadDashboardStats() {
         try {
-            const response = await fetch('http://localhost:4001/api/admin/dashboard-stats', {
+            const response = await fetch('/api/admin/dashboard-stats', {
                 headers: {
                     'Authorization': `Bearer ${this.adminToken}`
                 }
@@ -161,7 +162,7 @@ class AdminDashboard {
 
     async loadMenuItems() {
         try {
-            const response = await fetch('http://localhost:4001/api/admin/menu-items', {
+            const response = await fetch('/api/admin/menu-items', {
                 headers: {
                     'Authorization': `Bearer ${this.adminToken}`
                 }
@@ -288,7 +289,7 @@ class AdminDashboard {
 
     async loadOrders() {
         try {
-            const response = await fetch('http://localhost:4001/api/admin/orders', {
+            const response = await fetch('/api/admin/orders', {
                 headers: {
                     'Authorization': `Bearer ${this.adminToken}`
                 }
@@ -568,8 +569,8 @@ class AdminDashboard {
             });
 
             const url = this.currentEditingItem 
-                ? `http://localhost:4001/api/admin/menu-items/${this.currentEditingItem}`
-                : 'http://localhost:4001/api/admin/menu-items';
+                ? `/api/admin/menu-items/${this.currentEditingItem}`
+                : '/api/admin/menu-items';
             
             const method = this.currentEditingItem ? 'PUT' : 'POST';
             
@@ -634,7 +635,7 @@ class AdminDashboard {
         }
 
         try {
-            const response = await fetch(`http://localhost:4001/api/admin/menu-items/${itemId}`, {
+            const response = await fetch(`/api/admin/menu-items/${itemId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${this.adminToken}`
@@ -702,7 +703,7 @@ class AdminDashboard {
         const adminNotes = document.getElementById('adminNotes').value;
 
         try {
-            const response = await fetch(`http://localhost:4001/api/admin/orders/${this.currentOrderId}/status`, {
+            const response = await fetch(`/api/admin/orders/${this.currentOrderId}/status`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',

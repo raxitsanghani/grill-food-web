@@ -577,7 +577,7 @@
         this.menuItems = [];
         this.filteredItems = [];
         this.currentFilter = 'all';
-        this.apiBaseUrl = 'http://localhost:4000/api';
+        this.apiBaseUrl = '/api';
         this.socket = null;
         this.init();
       }
@@ -693,7 +693,7 @@
       }
 
       initializeSocket() {
-        this.socket = io('http://localhost:4000');
+        this.socket = io();
         
         this.socket.on('connect', () => {
           console.log('Connected to server for all menu updates');

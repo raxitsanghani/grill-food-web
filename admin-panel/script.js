@@ -75,7 +75,8 @@ class AdminPanel {
     }
 
     initializeSocket() {
-        this.socket = io('http://localhost:4001');
+        // Use the same port as the unified server
+        this.socket = io();
         
         this.socket.on('connect', () => {
             console.log('Connected to admin server');
@@ -100,7 +101,7 @@ class AdminPanel {
 
     async checkSetupStatus() {
         try {
-            const response = await fetch('http://localhost:4001/api/admin/setup-status');
+            const response = await fetch('/api/admin/setup-status');
             const data = await response.json();
             
             if (data.adminExists) {
@@ -182,7 +183,7 @@ class AdminPanel {
 
     async loadAdminInfo() {
         try {
-            const response = await fetch('http://localhost:4001/api/admin/profile', {
+            const response = await fetch('/api/admin/profile', {
                 headers: {
                     'Authorization': `Bearer ${this.adminToken}`
                 }
@@ -241,7 +242,7 @@ class AdminPanel {
         };
 
         try {
-            const response = await fetch('http://localhost:4001/api/admin/setup', {
+            const response = await fetch('/api/admin/setup', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -281,7 +282,7 @@ class AdminPanel {
         errorDiv.textContent = '';
 
         try {
-            const response = await fetch('http://localhost:4001/api/admin/login', {
+            const response = await fetch('/api/admin/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -322,7 +323,7 @@ class AdminPanel {
 
     async loadDashboardStats() {
         try {
-            const response = await fetch('http://localhost:4001/api/admin/dashboard-stats', {
+            const response = await fetch('/api/admin/dashboard-stats', {
                 headers: {
                     'Authorization': `Bearer ${this.adminToken}`
                 }
@@ -342,7 +343,7 @@ class AdminPanel {
 
     async loadMenuItems() {
         try {
-            const response = await fetch('http://localhost:4001/api/admin/menu-items', {
+            const response = await fetch('/api/admin/menu-items', {
                 headers: {
                     'Authorization': `Bearer ${this.adminToken}`
                 }
@@ -359,7 +360,7 @@ class AdminPanel {
 
     async loadOrders() {
         try {
-            const response = await fetch('http://localhost:4001/api/admin/orders', {
+            const response = await fetch('/api/admin/orders', {
                 headers: {
                     'Authorization': `Bearer ${this.adminToken}`
                 }
@@ -538,8 +539,8 @@ class AdminPanel {
 
         try {
             const url = this.currentEditingItem 
-                ? `http://localhost:4001/api/admin/menu-items/${this.currentEditingItem}`
-                : 'http://localhost:4001/api/admin/menu-items';
+                ? `/api/admin/menu-items/${this.currentEditingItem}`
+                : '/api/admin/menu-items';
             
             const method = this.currentEditingItem ? 'PUT' : 'POST';
 
@@ -576,7 +577,7 @@ class AdminPanel {
         }
 
         try {
-            const response = await fetch(`http://localhost:4001/api/admin/menu-items/${itemId}`, {
+            const response = await fetch(`/api/admin/menu-items/${itemId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${this.adminToken}`
@@ -644,7 +645,7 @@ class AdminPanel {
         const adminNotes = document.getElementById('adminNotes').value;
 
         try {
-            const response = await fetch(`http://localhost:4001/api/admin/orders/${this.currentOrderId}/status`, {
+            const response = await fetch(`/api/admin/orders/${this.currentOrderId}/status`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',

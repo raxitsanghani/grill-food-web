@@ -2,7 +2,7 @@
 
 class MenuItemManager {
     constructor() {
-        this.apiBaseUrl = 'http://localhost:4000/api';
+        this.apiBaseUrl = '/api';
         this.menuItems = [];
         this.currentItem = null;
         this.currentUser = null;

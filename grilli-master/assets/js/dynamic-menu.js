@@ -3,7 +3,7 @@
 class DynamicMenu {
     constructor() {
         this.menuItems = [];
-        this.apiBaseUrl = 'http://localhost:4000/api';
+        this.apiBaseUrl = '/api';
         this.currentUser = null;
         this.authToken = null;
         this.socket = null;
@@ -178,7 +178,7 @@ class DynamicMenu {
         console.log('DynamicMenu: Initializing socket connection...');
         
         // Connect to the user server for real-time menu updates
-        this.socket = io('http://localhost:4000');
+        this.socket = io();
         
         this.socket.on('connect', () => {
             console.log('DynamicMenu: Connected to user server for real-time menu updates');

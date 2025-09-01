@@ -5,7 +5,7 @@ class OrderingSystem {
         this.currentItem = null;
         this.gstRate = 0.18; // 18% GST
         this.deliveryCharge = 40; // Fixed delivery charge
-        this.apiBaseUrl = 'http://localhost:4000/api';
+        this.apiBaseUrl = '/api';
         this.socket = null;
         this.isDarkTheme = true; // Set dark theme as default
         this.init();
@@ -440,7 +440,7 @@ class OrderingSystem {
     initializeSocket() {
         // Initialize Socket.IO connection
         if (typeof io !== 'undefined') {
-            this.socket = io('http://localhost:4000');
+            this.socket = io();
             
             this.socket.on('connect', () => {
                 console.log('Connected to main server for ordering');

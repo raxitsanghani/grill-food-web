@@ -1,7 +1,7 @@
 // Simple Menu Display System
 class MenuDisplay {
     constructor() {
-        this.apiBaseUrl = 'http://localhost:4000/api';
+        this.apiBaseUrl = '/api';
         this.socket = null;
         this.init();
     }
@@ -14,7 +14,7 @@ class MenuDisplay {
     initializeSocket() {
         // Initialize Socket.IO connection for real-time updates
         if (typeof io !== 'undefined') {
-            this.socket = io('http://localhost:4000');
+            this.socket = io();
             
             this.socket.on('connect', () => {
                 console.log('Connected to main server for menu updates');

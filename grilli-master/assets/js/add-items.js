@@ -3,7 +3,7 @@
 class AddItemsPage {
     constructor() {
         this.menuItems = [];
-        this.apiBaseUrl = 'http://localhost:4000/api';
+        this.apiBaseUrl = '/api';
         this.currentUser = null;
         this.authToken = null;
     }

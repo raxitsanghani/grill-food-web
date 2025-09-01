@@ -2,9 +2,9 @@
   "name": "grilli-restaurant-app",
   "version": "1.0.0",
   "description": "Grilli Restaurant Website with Authentication",
-  "main": "server.js",
+  "main": "unified-server.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "node unified-server.js",
     "dev": "nodemon server.js",
     "admin": "node admin-server.js",
     "dev:admin": "nodemon admin-server.js",
