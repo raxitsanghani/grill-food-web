@@ -239,7 +239,8 @@ app.get('/api/users/orders', async (req, res) => {
 
 // Serve admin panel
 app.get('/admin', (req, res) => {
-    console.log('Admin panel requested:', req.path);
+    console.log('🔧 ADMIN PANEL REQUESTED:', req.path);
+    console.log('🔧 Admin panel file path:', path.join(__dirname, 'admin-panel', 'index.html'));
     res.sendFile(path.join(__dirname, 'admin-panel', 'index.html'));
 });
 
@@ -542,7 +543,20 @@ app.get('/api/health', (req, res) => {
         status: 'OK', 
         timestamp: new Date().toISOString(),
         database: 'Local JSON Database',
-        server: 'Unified Server'
+        server: 'UNIFIED SERVER',
+        adminPanel: 'Available at /admin',
+        userPanel: 'Available at /'
+    });
+});
+
+// Admin panel health check
+app.get('/api/admin/health', (req, res) => {
+    res.json({ 
+        status: 'OK', 
+        timestamp: new Date().toISOString(),
+        server: 'UNIFIED SERVER',
+        adminPanel: 'Working',
+        message: 'Admin panel is accessible'
     });
 });
 
@@ -571,8 +585,10 @@ app.get('*', (req, res) => {
 
 // Start server
 server.listen(PORT, () => {
-    console.log(`🚀 Unified Server is running on port ${PORT}`);
+    console.log(`🚀 UNIFIED SERVER is running on port ${PORT}`);
     console.log(`👥 User Panel: http://localhost:${PORT}`);
     console.log(`👨‍💼 Admin Panel: http://localhost:${PORT}/admin`);
     console.log(`📊 Using Local JSON Database`);
+    console.log(`🔧 Server Type: UNIFIED (User + Admin)`);
+    console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
 });
