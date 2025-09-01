@@ -232,6 +232,8 @@ class LoginSystem {
         this.clearUserData();
         this.showNotification('Logged out successfully');
         this.updateUIAfterLogout();
+        // Redirect to selection page
+        window.location.href = '/';
     }
 
     clearUserData() {

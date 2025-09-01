@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- 
+    - primary meta tags
+  -->
+  <title>Grilli - Admin Login</title>
+  <meta name="title" content="Grilli - Admin Login">
+  <meta name="description" content="Admin login for Grilli Restaurant Management">
+
+  <!-- 
+    - favicon
+  -->
+  <link rel="shortcut icon" href="./grilli-master/favicon.svg" type="image/svg+xml">
+
+  <!-- 
+    - google font link
+  -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700&family=Forum&display=swap" rel="stylesheet">
+
+  <!-- 
+    - custom css link
+  -->
+  <link rel="stylesheet" href="./grilli-master/assets/css/style.css">
+  
+  <style>
+    .login-container {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+      padding: 20px;
+    }
+
+    .login-content {
+      background: var(--eerie-black-2);
+      padding: 40px;
+      border-radius: 16px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+      max-width: 450px;
+      width: 100%;
+      border: 1px solid var(--white-alpha-10);
+    }
+
+    .login-header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .login-logo {
+      margin-bottom: 20px;
+    }
+
+    .login-logo img {
+      width: 160px;
+      height: auto;
+    }
+
+    .login-title {
+      font-family: var(--fontFamily-forum);
+      font-size: var(--fontSize-title-1);
+      color: var(--gold-crayola);
+      margin-bottom: 10px;
+      font-weight: var(--weight-bold);
+    }
+
+    .login-subtitle {
+      font-size: var(--fontSize-body-4);
+      color: var(--quick-silver);
+      margin-bottom: 0;
+    }
+
+    .login-form {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .form-group label {
+      font-size: var(--fontSize-label-1);
+      color: var(--white);
+      font-weight: var(--weight-bold);
+    }
+
+    .form-group input {
+      background: var(--eerie-black-3);
+      border: 1px solid var(--white-alpha-10);
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: var(--fontSize-body-4);
+      color: var(--white);
+      transition: all 0.3s ease;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: var(--gold-crayola);
+      box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.2);
+    }
+
+    .form-group input::placeholder {
+      color: var(--quick-silver);
+    }
+
+    .login-btn {
+      background: linear-gradient(135deg, var(--gold-crayola) 0%, #d4af37 100%);
+      color: var(--smoky-black-1);
+      border: none;
+      padding: 14px 24px;
+      border-radius: 8px;
+      font-size: var(--fontSize-body-3);
+      font-weight: var(--weight-bold);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: 10px;
+    }
+
+    .login-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(212, 175, 55, 0.3);
+    }
+
+    .login-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .error-message {
+      background: rgba(220, 53, 69, 0.1);
+      border: 1px solid rgba(220, 53, 69, 0.3);
+      color: #ff6b6b;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: var(--fontSize-label-2);
+      text-align: center;
+      display: none;
+    }
+
+    .back-btn {
+      background: transparent;
+      border: 1px solid var(--white-alpha-20);
+      color: var(--quick-silver);
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: var(--fontSize-label-2);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-block;
+      margin-bottom: 20px;
+    }
+
+    .back-btn:hover {
+      background: var(--white-alpha-10);
+      color: var(--white);
+    }
+
+    .loading {
+      display: none;
+      text-align: center;
+      color: var(--gold-crayola);
+      font-size: var(--fontSize-label-2);
+    }
+
+    .loading.show {
+      display: block;
+    }
+
+    @media (max-width: 768px) {
+      .login-content {
+        padding: 30px 20px;
+      }
+      
+      .login-title {
+        font-size: var(--fontSize-title-2);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="login-container">
+    <div class="login-content">
+      <a href="/" class="back-btn">← Back to Selection</a>
+      
+      <div class="login-header">
+        <div class="login-logo">
+          <img src="./grilli-master/assets/images/logo.svg" alt="Grilli - Admin Panel">
+        </div>
+        <h1 class="login-title">Admin Login</h1>
+        <p class="login-subtitle">Restaurant Management System</p>
+      </div>
+      
+      <form id="adminLoginForm" class="login-form">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" placeholder="Enter your email" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" placeholder="Enter your password" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="key">Key</label>
+          <input type="text" id="key" placeholder="Enter 6-digit key" maxlength="6" required>
+        </div>
+        
+        <button type="submit" class="login-btn" id="loginBtn">
+          Login to Admin Panel
+        </button>
+        
+        <div class="loading" id="loading">
+          Authenticating...
+        </div>
+        
+        <div id="errorMessage" class="error-message"></div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('adminLoginForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const key = document.getElementById('key').value;
+      
+      const loginBtn = document.getElementById('loginBtn');
+      const loading = document.getElementById('loading');
+      const errorMessage = document.getElementById('errorMessage');
+      
+      // Show loading state
+      loginBtn.disabled = true;
+      loading.classList.add('show');
+      errorMessage.style.display = 'none';
+      
+      try {
+        // Fixed credentials check
+        if (email === 'raxitsanghani@gmail.com' && password === 'raxit2112' && key === '123456') {
+          // Store admin session
+          sessionStorage.setItem('adminAuthenticated', 'true');
+          sessionStorage.setItem('adminEmail', email);
+          
+          // Redirect to admin panel
+          window.location.href = '/admin';
+        } else {
+          throw new Error('Invalid credentials. Please check your email, password, and key.');
+        }
+      } catch (error) {
+        errorMessage.textContent = error.message;
+        errorMessage.style.display = 'block';
+      } finally {
+        loginBtn.disabled = false;
+        loading.classList.remove('show');
+      }
+    });
+
+    // Check if already authenticated
+    if (sessionStorage.getItem('adminAuthenticated') === 'true') {
+      window.location.href = '/admin';
+    }
+  </script>
+</body>
+
+</html>

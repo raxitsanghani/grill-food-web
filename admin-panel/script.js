@@ -15,12 +15,6 @@ class AdminPanel {
     }
 
     initializeEventListeners() {
-        // Account creation form
-        document.getElementById('accountCreationForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.handleAccountCreation();
-        });
-
         // Login form
         document.getElementById('loginForm').addEventListener('submit', (e) => {
             e.preventDefault();
@@ -70,7 +64,7 @@ class AdminPanel {
         // Show loading screen for 2 seconds
         setTimeout(() => {
             document.getElementById('loadingScreen').classList.remove('active');
-            this.checkSetupStatus();
+            this.checkAuthentication();
         }, 2000);
     }
 
@@ -99,33 +93,27 @@ class AdminPanel {
         });
     }
 
-    async checkSetupStatus() {
+    async checkAuthentication() {
         try {
-            const response = await fetch('/api/admin/setup-status');
-            const data = await response.json();
+            // Check if user is authenticated via session storage
+            const isAuthenticated = sessionStorage.getItem('adminAuthenticated') === 'true';
             
-            if (data.adminExists) {
-                // Admin exists, show login form
-                this.showLogin();
+            if (isAuthenticated) {
+                // User is authenticated, show dashboard
+                this.adminToken = 'authenticated'; // Set a dummy token for fixed admin
+                this.showDashboard();
             } else {
-                // No admin exists, show account creation form
-                this.showAccountCreation();
+                // User is not authenticated, redirect to login
+                window.location.href = '/admin-login';
             }
         } catch (error) {
-            console.error('Error checking setup status:', error);
-            // Default to account creation if there's an error
-            this.showAccountCreation();
+            console.error('Error checking authentication:', error);
+            // Redirect to login if there's an error
+            window.location.href = '/admin-login';
         }
     }
 
-    showAccountCreation() {
-        document.getElementById('accountCreationModal').classList.add('active');
-        document.getElementById('loginModal').classList.remove('active');
-        document.getElementById('adminPanel').classList.add('hidden');
-    }
-
     showLogin() {
-        document.getElementById('accountCreationModal').classList.remove('active');
         document.getElementById('loginModal').classList.add('active');
         document.getElementById('adminPanel').classList.add('hidden');
     }
@@ -133,7 +121,7 @@ class AdminPanel {
     showDashboard() {
         try {
             // Hide all modals and show admin panel
-            const accountCreationModal = document.getElementById('accountCreationModal');
+            const authCheck = document.getElementById('authCheck');
             const loginModal = document.getElementById('loginModal');
             const adminPanel = document.getElementById('adminPanel');
             const dashboard = document.getElementById('dashboard');
@@ -141,7 +129,7 @@ class AdminPanel {
             const orderStatusPage = document.getElementById('orderStatusPage');
             
             console.log('Elements found:', {
-                accountCreationModal: !!accountCreationModal,
+                authCheck: !!authCheck,
                 loginModal: !!loginModal,
                 adminPanel: !!adminPanel,
                 dashboard: !!dashboard,
@@ -149,7 +137,7 @@ class AdminPanel {
                 orderStatusPage: !!orderStatusPage
             });
             
-            if (accountCreationModal) accountCreationModal.classList.remove('active');
+            if (authCheck) authCheck.classList.remove('active');
             if (loginModal) loginModal.classList.remove('active');
             if (adminPanel) adminPanel.classList.remove('hidden');
             
@@ -201,75 +189,7 @@ class AdminPanel {
         }
     }
 
-    async handleAccountCreation() {
-        const fullName = document.getElementById('fullName').value;
-        const email = document.getElementById('email').value;
-        const phone = document.getElementById('phone').value;
-        const password = document.getElementById('password').value;
-        const confirmPassword = document.getElementById('confirmPassword').value;
-        const securityKey = document.getElementById('securityKey').value;
 
-        const errorDiv = document.getElementById('accountCreationError');
-        errorDiv.textContent = '';
-
-        // Validation
-        if (!fullName || !email || !phone || !password || !confirmPassword || !securityKey) {
-            errorDiv.textContent = 'All fields are required';
-            return;
-        }
-
-        if (password !== confirmPassword) {
-            errorDiv.textContent = 'Passwords do not match';
-            return;
-        }
-
-        if (password.length < 6) {
-            errorDiv.textContent = 'Password must be at least 6 characters long';
-            return;
-        }
-
-        if (securityKey.length !== 6 || !/^\d{6}$/.test(securityKey)) {
-            errorDiv.textContent = 'Security key must be exactly 6 digits';
-            return;
-        }
-
-        const formData = {
-            fullName,
-            email,
-            phone,
-            password,
-            securityKey
-        };
-
-        try {
-            const response = await fetch('/api/admin/setup', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(formData)
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                this.adminToken = data.token;
-                localStorage.setItem('adminToken', data.token);
-                this.showNotification('Admin account created successfully!', 'success');
-                // Clear form
-                document.getElementById('accountCreationForm').reset();
-                // Redirect to dashboard page
-                setTimeout(() => {
-                    window.location.href = './dashboard.html';
-                }, 1000);
-            } else {
-                errorDiv.textContent = data.error || 'Account creation failed';
-            }
-        } catch (error) {
-            console.error('Account creation error:', error);
-            errorDiv.textContent = 'Network error. Please try again.';
-        }
-    }
 
     async handleLogin() {
         const formData = {
@@ -316,9 +236,11 @@ class AdminPanel {
 
     handleLogout() {
         this.adminToken = null;
-        localStorage.removeItem('adminToken');
+        sessionStorage.removeItem('adminAuthenticated');
+        sessionStorage.removeItem('adminEmail');
         this.showNotification('Logged out successfully', 'info');
-        this.showLogin();
+        // Redirect to selection page
+        window.location.href = '/';
     }
 
     async loadDashboardStats() {

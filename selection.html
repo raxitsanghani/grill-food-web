@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- 
+    - primary meta tags
+  -->
+  <title>Grilli - Welcome</title>
+  <meta name="title" content="Grilli - Amazing & Delicious Food">
+  <meta name="description" content="Welcome to Grilli Restaurant - Choose your experience">
+
+  <!-- 
+    - favicon
+  -->
+  <link rel="shortcut icon" href="./grilli-master/favicon.svg" type="image/svg+xml">
+
+  <!-- 
+    - google font link
+  -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700&family=Forum&display=swap" rel="stylesheet">
+
+  <!-- 
+    - custom css link
+  -->
+  <link rel="stylesheet" href="./grilli-master/assets/css/style.css">
+  
+  <style>
+    .selection-container {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+      padding: 20px;
+    }
+
+    .selection-content {
+      text-align: center;
+      max-width: 600px;
+      width: 100%;
+    }
+
+    .selection-logo {
+      margin-bottom: 40px;
+    }
+
+    .selection-logo img {
+      width: 200px;
+      height: auto;
+    }
+
+    .selection-title {
+      font-family: var(--fontFamily-forum);
+      font-size: var(--fontSize-headline-1);
+      color: var(--gold-crayola);
+      margin-bottom: 20px;
+      font-weight: var(--weight-bold);
+    }
+
+    .selection-subtitle {
+      font-size: var(--fontSize-body-2);
+      color: var(--quick-silver);
+      margin-bottom: 60px;
+      line-height: var(--lineHeight-5);
+    }
+
+    .selection-buttons {
+      display: flex;
+      gap: 30px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .selection-btn {
+      background: linear-gradient(135deg, var(--gold-crayola) 0%, #d4af37 100%);
+      color: var(--smoky-black-1);
+      border: none;
+      padding: 20px 40px;
+      border-radius: 12px;
+      font-size: var(--fontSize-body-2);
+      font-weight: var(--weight-bold);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-block;
+      min-width: 200px;
+      box-shadow: 0 8px 25px rgba(212, 175, 55, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .selection-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 35px rgba(212, 175, 55, 0.4);
+    }
+
+    .selection-btn:active {
+      transform: translateY(-1px);
+    }
+
+    .selection-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.5s;
+    }
+
+    .selection-btn:hover::before {
+      left: 100%;
+    }
+
+    .btn-icon {
+      font-size: 24px;
+      margin-right: 10px;
+    }
+
+    .selection-footer {
+      margin-top: 60px;
+      color: var(--quick-silver);
+      font-size: var(--fontSize-label-2);
+    }
+
+    .selection-footer a {
+      color: var(--gold-crayola);
+      text-decoration: none;
+    }
+
+    .selection-footer a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 768px) {
+      .selection-buttons {
+        flex-direction: column;
+        align-items: center;
+      }
+      
+      .selection-btn {
+        min-width: 250px;
+      }
+      
+      .selection-title {
+        font-size: var(--fontSize-title-1);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="selection-container">
+    <div class="selection-content">
+      <div class="selection-logo">
+        <img src="./grilli-master/assets/images/logo.svg" alt="Grilli - Amazing & Delicious Food">
+      </div>
+      
+      <h1 class="selection-title">Welcome to Grilli</h1>
+      <p class="selection-subtitle">
+        Experience amazing & delicious food with our premium restaurant services. 
+        Choose your preferred experience below.
+      </p>
+      
+      <div class="selection-buttons">
+        <a href="/user" class="selection-btn">
+          <span class="btn-icon">🍽️</span>
+          User Web
+        </a>
+        
+        <a href="/admin-login" class="selection-btn">
+          <span class="btn-icon">👨‍💼</span>
+          Admin Web
+        </a>
+      </div>
+      
+      <div class="selection-footer">
+        <p>
+          <strong>Contact:</strong> 
+          <a href="tel:+919510261149">+91 9510261149</a> | 
+          <a href="mailto:raxitsanghani@gmail.com">raxitsanghani@gmail.com</a>
+        </p>
+        <p>CG Road, Navrangpura, Ahmedabad 380009, Gujarat, India</p>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>

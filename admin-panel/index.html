@@ -76,65 +76,19 @@
         </div>
     </div>
 
-    <!-- Account Creation Modal -->
-    <div id="accountCreationModal" class="modal active">
-        <div class="modal-content large">
+    <!-- Authentication Check -->
+    <div id="authCheck" class="modal active">
+        <div class="modal-content">
             <div class="modal-header">
                 <div class="logo-section">
                     <img src="../grilli-master/assets/images/logo.svg" width="160" height="50" alt="Grilli - Admin Panel">
                 </div>
-                <h2>Create Admin Account</h2>
-                <p>First-time setup for restaurant management</p>
+                <h2>Checking Authentication</h2>
+                <p>Please wait while we verify your access...</p>
             </div>
-            
-            <form id="accountCreationForm" class="admin-form">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="fullName">Full Name *</label>
-                        <input type="text" id="fullName" placeholder="Enter your full name" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="email">Email ID *</label>
-                        <input type="email" id="email" placeholder="Enter your email address" required>
-                    </div>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="phone">Phone Number *</label>
-                        <input type="tel" id="phone" placeholder="Enter your phone number" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="password">Password *</label>
-                        <div class="password-input">
-                            <input type="password" id="password" placeholder="Create a strong password" required>
-                            <button type="button" class="eye-btn" onclick="togglePassword('password')">👁️</button>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="confirmPassword">Confirm Password *</label>
-                    <div class="password-input">
-                        <input type="password" id="confirmPassword" placeholder="Confirm your password" required>
-                        <button type="button" class="eye-btn" onclick="togglePassword('confirmPassword')">👁️</button>
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="securityKey">6-Digit Security Key *</label>
-                    <input type="text" id="securityKey" placeholder="Enter 6 digits (e.g., 123456)" maxlength="6" pattern="[0-9]{6}" required>
-                    <small>This key will be required for future logins</small>
-                </div>
-                
-                <button type="submit" class="primary-btn">Create Admin Account</button>
-                
-                <div id="accountCreationError" class="error-message"></div>
-                
-                <div class="form-footer">
-                    <p>Already have an account? <button type="button" class="link-btn" onclick="showLogin()">Login here</button></p>
-                </div>
-            </form>
+            <div class="loading-spinner" style="text-align: center; padding: 20px;">
+                <div class="loading-spinner"></div>
+            </div>
         </div>
     </div>
 
@@ -173,7 +127,7 @@
                 <div id="loginError" class="error-message"></div>
                 
                 <div class="form-footer">
-                    <p>Don't have an admin account? <button type="button" class="link-btn" onclick="showSignup()">Create one</button></p>
+                    <p>Need access? Contact the system administrator.</p>
                 </div>
             </form>
         </div>

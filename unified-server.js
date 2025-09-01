@@ -45,6 +45,19 @@ const authenticateAdmin = async (req, res, next) => {
         }
 
         const decoded = jwt.verify(token, JWT_SECRET);
+        
+        // Handle fixed admin authentication
+        if (decoded.adminId === 'fixed-admin' && decoded.email === 'raxitsanghani@gmail.com') {
+            req.admin = {
+                _id: 'fixed-admin',
+                fullName: 'Admin User',
+                email: 'raxitsanghani@gmail.com',
+                phone: '+91 9510261149'
+            };
+            return next();
+        }
+
+        // Fallback to database admin check (for backward compatibility)
         const admins = db.getAllAdmins();
         const admin = admins.find(a => a._id === decoded.adminId);
         
@@ -60,11 +73,25 @@ const authenticateAdmin = async (req, res, next) => {
 };
 
 // ========================================
+// MAIN ROUTES
+// ========================================
+
+// Serve selection page as main entry point
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'selection.html'));
+});
+
+// Serve admin login page
+app.get('/admin-login', (req, res) => {
+    res.sendFile(path.join(__dirname, 'admin-login.html'));
+});
+
+// ========================================
 // USER ROUTES (Public)
 // ========================================
 
 // Serve user frontend
-app.get('/', (req, res) => {
+app.get('/user', (req, res) => {
     res.sendFile(path.join(__dirname, 'grilli-master', 'index.html'));
 });
 
@@ -237,7 +264,7 @@ app.get('/api/users/orders', async (req, res) => {
 // ADMIN ROUTES (Protected)
 // ========================================
 
-// Serve admin panel
+// Serve admin panel (with authentication check)
 app.get('/admin', (req, res) => {
     console.log('🔧 ADMIN PANEL REQUESTED:', req.path);
     console.log('🔧 Admin panel file path:', path.join(__dirname, 'admin-panel', 'index.html'));
@@ -255,68 +282,7 @@ app.get('/admin/*', (req, res) => {
     res.sendFile(path.join(__dirname, 'admin-panel', 'index.html'));
 });
 
-// Admin setup and authentication
-app.get('/api/admin/setup-status', async (req, res) => {
-    try {
-        const admins = db.getAllAdmins();
-        res.json({ 
-            requiresSetup: false,
-            adminExists: admins.length > 0 
-        });
-    } catch (error) {
-        res.status(500).json({ error: 'Server error' });
-    }
-});
-
-app.post('/api/admin/setup', async (req, res) => {
-    try {
-        const { fullName, email, phone, password, securityKey } = req.body;
-
-        if (!fullName || !email || !phone || !password || !securityKey) {
-            return res.status(400).json({ error: 'All fields are required' });
-        }
-
-        if (password.length < 6) {
-            return res.status(400).json({ error: 'Password must be at least 6 characters long' });
-        }
-
-        if (securityKey.length !== 6 || !/^\d{6}$/.test(securityKey)) {
-            return res.status(400).json({ error: 'Security key must be exactly 6 digits' });
-        }
-
-        const existingAdmin = db.getAdminByEmail(email);
-        if (existingAdmin) {
-            return res.status(400).json({ error: 'Email already registered. Please use a different email or login with existing account.' });
-        }
-
-        const salt = await bcryptjs.genSalt(10);
-        const hashedPassword = await bcryptjs.hash(password, salt);
-
-        const admin = db.createAdmin({
-            fullName,
-            email,
-            phone,
-            password: hashedPassword,
-            securityKey
-        });
-
-        const token = jwt.sign({ adminId: admin._id }, JWT_SECRET, { expiresIn: '24h' });
-
-        res.status(201).json({
-            message: 'Admin account created successfully',
-            token,
-            admin: {
-                id: admin._id,
-                fullName: admin.fullName,
-                email: admin.email
-            }
-        });
-    } catch (error) {
-        console.error('Admin setup error:', error);
-        res.status(500).json({ error: 'Server error' });
-    }
-});
-
+// Admin authentication with fixed credentials
 app.post('/api/admin/login', async (req, res) => {
     try {
         const { email, password, securityKey } = req.body;
@@ -325,31 +291,22 @@ app.post('/api/admin/login', async (req, res) => {
             return res.status(400).json({ error: 'All fields are required' });
         }
 
-        const admin = db.getAdminByEmail(email);
-        if (!admin) {
-            return res.status(400).json({ error: 'Invalid credentials' });
+        // Fixed credentials check
+        if (email === 'raxitsanghani@gmail.com' && password === 'raxit2112' && securityKey === '123456') {
+            const token = jwt.sign({ adminId: 'fixed-admin', email: email }, JWT_SECRET, { expiresIn: '24h' });
+
+            res.json({
+                message: 'Login successful',
+                token,
+                admin: {
+                    id: 'fixed-admin',
+                    fullName: 'Admin User',
+                    email: email
+                }
+            });
+        } else {
+            return res.status(401).json({ error: 'Invalid credentials' });
         }
-
-        if (admin.securityKey !== securityKey) {
-            return res.status(400).json({ error: 'Invalid security key' });
-        }
-
-        const validPassword = await bcryptjs.compare(password, admin.password);
-        if (!validPassword) {
-            return res.status(400).json({ error: 'Invalid credentials' });
-        }
-
-        const token = jwt.sign({ adminId: admin._id }, JWT_SECRET, { expiresIn: '24h' });
-
-        res.json({
-            message: 'Login successful',
-            token,
-            admin: {
-                id: admin._id,
-                fullName: admin.fullName,
-                email: admin.email
-            }
-        });
     } catch (error) {
         console.error('Admin login error:', error);
         res.status(500).json({ error: 'Server error' });

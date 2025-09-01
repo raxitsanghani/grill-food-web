@@ -65,16 +65,16 @@ If you need custom configuration:
 ### Step 5: Deploy
 1. **Click "Create Web Service"**
 2. **Wait for deployment** (usually 2-5 minutes)
-3. **Get your URL**: `https://your-app-name.onrender.com`
+3. **Get your URL**: `https://grill-food-web.onrender.com`
 
 ## Access Your Deployed App
 
 ### User Website
-- **URL**: `https://your-app-name.onrender.com`
+- **URL**: `https://grill-food-web.onrender.com`
 - **Features**: Menu browsing, ordering, user authentication
 
 ### Admin Panel
-- **URL**: `https://your-app-name.onrender.com/admin`
+- **URL**: `https://grill-food-web.onrender.com/admin`
 - **Features**: Menu management, order tracking, admin authentication
 
 ## Important Notes
@@ -86,12 +86,12 @@ If you need custom configuration:
 
 ### 2. Route Structure
 ```
-https://your-app.onrender.com/           → User homepage
-https://your-app.onrender.com/all-menu   → Menu page
-https://your-app.onrender.com/orders     → Orders page
-https://your-app.onrender.com/admin      → Admin panel
-https://your-app.onrender.com/api/*      → User APIs
-https://your-app.onrender.com/api/admin/* → Admin APIs
+https://grill-food-web.onrender.com/           → User homepage
+https://grill-food-web.onrender.com/all-menu   → Menu page
+https://grill-food-web.onrender.com/orders     → Orders page
+https://grill-food-web.onrender.com/admin      → Admin panel
+https://grill-food-web.onrender.com/api/*      → User APIs
+https://grill-food-web.onrender.com/api/admin/* → Admin APIs
 ```
 
 ### 3. Database
