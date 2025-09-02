@@ -69,11 +69,11 @@ class AdminPanel {
     }
 
     initializeSocket() {
-        // Use the same port as the unified server
-        this.socket = io();
+        // Connect to the unified server on port 5000
+        this.socket = io('http://localhost:5000');
         
         this.socket.on('connect', () => {
-            console.log('Connected to admin server');
+            console.log('Connected to unified server on port 5000');
         });
 
         this.socket.on('disconnect', () => {
@@ -103,17 +103,19 @@ class AdminPanel {
                 this.adminToken = 'authenticated'; // Set a dummy token for fixed admin
                 this.showDashboard();
             } else {
-                // User is not authenticated, redirect to login
-                window.location.href = '/admin-login';
+                // User is not authenticated, show login modal
+                this.showLogin();
             }
         } catch (error) {
             console.error('Error checking authentication:', error);
-            // Redirect to login if there's an error
-            window.location.href = '/admin-login';
+            // Show login if there's an error
+            this.showLogin();
         }
     }
 
     showLogin() {
+        // Hide auth check modal and show login modal
+        document.getElementById('authCheck').classList.remove('active');
         document.getElementById('loginModal').classList.add('active');
         document.getElementById('adminPanel').classList.add('hidden');
     }
@@ -221,9 +223,9 @@ class AdminPanel {
                 document.getElementById('loginForm').reset();
                 
                 console.log('Login successful, redirecting to dashboard...');
-                // Redirect to separate dashboard page
+                // Redirect to dashboard under /admin namespace so assets resolve correctly
                 setTimeout(() => {
-                    window.location.href = './dashboard.html';
+                    window.location.href = '/admin/dashboard';
                 }, 1000);
             } else {
                 errorDiv.textContent = data.error || 'Login failed';
@@ -240,7 +242,9 @@ class AdminPanel {
         sessionStorage.removeItem('adminEmail');
         this.showNotification('Logged out successfully', 'info');
         // Redirect to selection page
-        window.location.href = '/';
+        setTimeout(() => {
+            window.location.href = '/';
+        }, 1000);
     }
 
     async loadDashboardStats() {
@@ -693,9 +697,7 @@ function togglePassword(inputId) {
     input.type = type;
 }
 
-function showSignup() {
-    adminPanel.showAccountCreation();
-}
+// Removed showSignup function - no signup allowed for admin
 
 function showLogin() {
     adminPanel.showLogin();

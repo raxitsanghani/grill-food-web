@@ -62,6 +62,8 @@ class OrderingSystem {
     }
 
     async showOrderModal(itemId = null) {
+        console.log('showOrderModal called with itemId:', itemId);
+        
         // Allow ordering without requiring login
         // If loginSystem exists and user is logged in, we can still proceed normally
 
@@ -69,10 +71,18 @@ class OrderingSystem {
         
         if (itemId && !item) {
             try {
-                const response = await fetch(`${this.apiBaseUrl}/menu-items/${itemId}`);
+                console.log('Fetching item details for:', itemId);
+                // Use explicit by-id endpoint to avoid category route collision
+                const response = await fetch(`${this.apiBaseUrl}/menu-items/by-id/${itemId}`);
+                console.log('Response status:', response.status);
                 if (response.ok) {
                     item = await response.json();
+                    console.log('Item fetched:', item);
                     this.currentItem = item;
+                } else {
+                    console.error('Failed to fetch item:', response.status, response.statusText);
+                    this.showNotification('Error loading item details', 'error');
+                    return;
                 }
             } catch (error) {
                 console.error('Error fetching item details:', error);
@@ -82,10 +92,12 @@ class OrderingSystem {
         }
 
         if (!item) {
+            console.error('No item available for ordering');
             this.showNotification('No item selected for ordering', 'error');
             return;
         }
 
+        console.log('Displaying order modal for item:', item);
         this.displayOrderModal(item);
     }
 
@@ -153,97 +165,173 @@ class OrderingSystem {
     displayOrderModal(item) {
         const modalHTML = `
             <div id="orderModal" class="order-modal active">
+                <div class="order-modal-overlay" onclick="orderingSystem.closeOrderModal()"></div>
                 <div class="order-modal-content">
                     <div class="order-modal-header">
-                        <h2>Order ${item.name}</h2>
-                        <button class="close-modal" onclick="orderingSystem.closeOrderModal()">&times;</button>
+                        <div class="header-content">
+                            <h2>🍽️ Place Your Order</h2>
+                            <p class="header-subtitle">Complete your order details below</p>
+                        </div>
+                        <button class="close-modal" onclick="orderingSystem.closeOrderModal()">
+                            <span>&times;</span>
+                        </button>
                     </div>
                     
-                    <div class="order-item-details">
-                        <div class="item-image">
-                            <img src="${item.image}" alt="${item.name}" onerror="this.src='./assets/images/menu-1.png'">
+                    <div class="order-modal-body">
+                        <!-- Item Details Section -->
+                        <div class="item-details-section">
+                            <div class="item-image-container">
+                                <img src="${item.image}" alt="${item.name}" class="item-image" onerror="this.src='./assets/images/menu-1.png'">
+                                ${item.badge ? `<div class="item-badge">${item.badge}</div>` : ''}
+                            </div>
+                            <div class="item-info">
+                                <h3 class="item-name">${item.name}</h3>
+                                <p class="item-description">${item.description}</p>
+                                <div class="item-meta">
+                                    <div class="item-type">
+                                        <span class="type-icon">${item.type === 'veg' ? '🌱' : '🍖'}</span>
+                                        <span>${item.type === 'veg' ? 'Vegetarian' : 'Non-Vegetarian'}</span>
+                                    </div>
+                                    <div class="item-delivery-time">
+                                        <span class="time-icon">⏱️</span>
+                                        <span>${item.deliveryTime || '25-35 min'}</span>
+                                    </div>
+                                </div>
+                                <div class="item-price">
+                                    <span class="price-label">Price:</span>
+                                    <span class="price-amount">₹${item.price.toFixed(2)}</span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="item-info">
-                            <h3>${item.name}</h3>
-                            <p class="item-description">${item.description}</p>
-                            <p class="item-type ${item.type === 'veg' ? 'vegetarian' : 'non-vegetarian'}">${item.type === 'veg' ? '🥬 Vegetarian' : '🍖 Non-Vegetarian'}</p>
-                            <p class="item-price">₹${item.price.toFixed(2)}</p>
-                        </div>
+                        
+                        <!-- Order Form -->
+                        <form id="orderForm" class="order-form">
+                            <div class="form-section">
+                                <h4 class="section-title">📝 Order Details</h4>
+                                
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="quantity">Quantity</label>
+                                        <div class="quantity-selector">
+                                            <button type="button" class="qty-btn" onclick="orderingSystem.decreaseQuantity()">-</button>
+                                            <input type="number" id="quantity" name="quantity" min="1" value="1" readonly>
+                                            <button type="button" class="qty-btn" onclick="orderingSystem.increaseQuantity()">+</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-section">
+                                <h4 class="section-title">👤 Customer Information</h4>
+                                
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="customerName">Full Name *</label>
+                                        <input type="text" id="customerName" name="customerName" placeholder="Enter your full name" required>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="customerPhone">Phone Number *</label>
+                                        <input type="tel" id="customerPhone" name="customerPhone" placeholder="Enter your phone number" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="customerEmail">Email (Optional)</label>
+                                        <input type="email" id="customerEmail" name="customerEmail" placeholder="Enter your email">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-section">
+                                <h4 class="section-title">📍 Delivery Information</h4>
+                                
+                                <div class="form-group">
+                                    <label for="deliveryAddress">Delivery Address *</label>
+                                    <textarea id="deliveryAddress" name="deliveryAddress" rows="3" placeholder="Enter your complete delivery address" required></textarea>
+                                </div>
+                                
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="deliveryDate">Preferred Delivery Date</label>
+                                        <input type="date" id="deliveryDate" name="deliveryDate" min="${new Date().toISOString().split('T')[0]}">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="deliveryTime">Preferred Time</label>
+                                        <select id="deliveryTime" name="deliveryTime">
+                                            <option value="">Select time</option>
+                                            <option value="12:00-13:00">12:00 PM - 1:00 PM</option>
+                                            <option value="13:00-14:00">1:00 PM - 2:00 PM</option>
+                                            <option value="19:00-20:00">7:00 PM - 8:00 PM</option>
+                                            <option value="20:00-21:00">8:00 PM - 9:00 PM</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-section">
+                                <h4 class="section-title">💳 Payment Method</h4>
+                                
+                                <div class="payment-options">
+                                    <label class="payment-option">
+                                        <input type="radio" name="paymentMethod" value="cash" required>
+                                        <div class="payment-card">
+                                            <span class="payment-icon">💵</span>
+                                            <span class="payment-text">Cash on Delivery</span>
+                                        </div>
+                                    </label>
+                                    
+                                    <label class="payment-option">
+                                        <input type="radio" name="paymentMethod" value="card" required>
+                                        <div class="payment-card">
+                                            <span class="payment-icon">💳</span>
+                                            <span class="payment-text">Credit/Debit Card</span>
+                                        </div>
+                                    </label>
+                                    
+                                    <label class="payment-option">
+                                        <input type="radio" name="paymentMethod" value="upi" required>
+                                        <div class="payment-card">
+                                            <span class="payment-icon">📱</span>
+                                            <span class="payment-text">UPI Payment</span>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <!-- Order Summary -->
+                            <div class="order-summary-section">
+                                <h4 class="section-title">💰 Order Summary</h4>
+                                <div class="order-summary">
+                                    <div class="summary-row">
+                                        <span>Item Price (×<span id="summaryQuantity">1</span>):</span>
+                                        <span>₹<span id="summaryItemPrice">${item.price.toFixed(2)}</span></span>
+                                    </div>
+                                    <div class="summary-row">
+                                        <span>Delivery Fee:</span>
+                                        <span>₹<span id="deliveryFee">30</span></span>
+                                    </div>
+                                    <div class="summary-row">
+                                        <span>Service Tax (5%):</span>
+                                        <span>₹<span id="serviceTax">${(item.price * 0.05).toFixed(2)}</span></span>
+                                    </div>
+                                    <div class="summary-row total">
+                                        <span>Total Amount:</span>
+                                        <span>₹<span id="totalAmount">${(item.price + 30 + (item.price * 0.05)).toFixed(2)}</span></span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button type="button" class="btn-secondary" onclick="orderingSystem.closeOrderModal()">
+                                    <span>Cancel</span>
+                                </button>
+                                <button type="submit" class="btn-primary">
+                                    <span>🚀 Place Order</span>
+                                </button>
+                            </div>
+                        </form>
                     </div>
-                    
-                    <form id="orderForm" class="order-form">
-                        <div class="form-group">
-                            <label for="customerName">Name:</label>
-                            <input type="text" id="customerName" name="customerName" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="vegType">Veg / Non-Veg:</label>
-                            <select id="vegType" name="vegType" required>
-                                <option value="">Select Type</option>
-                                <option value="veg">Vegetarian</option>
-                                <option value="non-veg">Non-Vegetarian</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="address">Address:</label>
-                            <textarea id="address" name="address" rows="3" required placeholder="Full delivery address"></textarea>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="quantity">Quantity:</label>
-                            <input type="number" id="quantity" name="quantity" value="1" min="1" max="50" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="specialInstructions">Note (extra instructions):</label>
-                            <textarea id="specialInstructions" name="specialInstructions" rows="3" placeholder="Any special requests or instructions..." required></textarea>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="deliveryDate">Date:</label>
-                            <input type="date" id="deliveryDate" name="deliveryDate" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="deliveryTime">Time:</label>
-                            <input type="time" id="deliveryTime" name="deliveryTime" required>
-                        </div>
-                        
-                        <div class="price-breakdown">
-                            <h4>Price Breakdown</h4>
-                            <div class="price-row">
-                                <span>Item Price:</span>
-                                <span id="itemPrice">₹${item.price.toFixed(2)}</span>
-                            </div>
-                            <div class="price-row">
-                                <span>Quantity:</span>
-                                <span id="quantityDisplay">1</span>
-                            </div>
-                            <div class="price-row">
-                                <span>Subtotal:</span>
-                                <span id="subtotal">₹${item.price.toFixed(2)}</span>
-                            </div>
-                            <div class="price-row">
-                                <span>GST (18%):</span>
-                                <span id="gstAmount">₹${(item.price * this.gstRate).toFixed(2)}</span>
-                            </div>
-                            <div class="price-row">
-                                <span>Delivery Charge:</span>
-                                <span id="deliveryChargeDisplay">₹${this.deliveryCharge.toFixed(2)}</span>
-                            </div>
-                            <div class="price-row total">
-                                <span>Total Amount:</span>
-                                <span id="totalAmount">₹${this.calculateTotal(item.price, 1).toFixed(2)}</span>
-                            </div>
-                        </div>
-                        
-                        <div class="form-actions">
-                            <button type="button" class="btn-secondary" onclick="orderingSystem.closeOrderModal()">Cancel</button>
-                            <button type="submit" class="btn-primary">Place Order</button>
-                        </div>
-                    </form>
                 </div>
             </div>
         `;
@@ -290,6 +378,47 @@ class OrderingSystem {
         this.currentItem = null;
     }
 
+    increaseQuantity() {
+        const quantityInput = document.getElementById('quantity');
+        if (quantityInput) {
+            const currentQty = parseInt(quantityInput.value) || 1;
+            const newQty = Math.min(currentQty + 1, 10); // Max 10 items
+            quantityInput.value = newQty;
+            this.updateOrderSummary();
+        }
+    }
+
+    decreaseQuantity() {
+        const quantityInput = document.getElementById('quantity');
+        if (quantityInput) {
+            const currentQty = parseInt(quantityInput.value) || 1;
+            const newQty = Math.max(currentQty - 1, 1); // Min 1 item
+            quantityInput.value = newQty;
+            this.updateOrderSummary();
+        }
+    }
+
+    updateOrderSummary() {
+        if (!this.currentItem) return;
+        
+        const quantity = parseInt(document.getElementById('quantity')?.value) || 1;
+        const itemPrice = this.currentItem.price;
+        const deliveryFee = 30;
+        const serviceTax = (itemPrice * quantity) * 0.05;
+        const total = (itemPrice * quantity) + deliveryFee + serviceTax;
+
+        // Update summary elements
+        const summaryQuantity = document.getElementById('summaryQuantity');
+        const summaryItemPrice = document.getElementById('summaryItemPrice');
+        const serviceTaxElement = document.getElementById('serviceTax');
+        const totalAmount = document.getElementById('totalAmount');
+
+        if (summaryQuantity) summaryQuantity.textContent = quantity;
+        if (summaryItemPrice) summaryItemPrice.textContent = (itemPrice * quantity).toFixed(2);
+        if (serviceTaxElement) serviceTaxElement.textContent = serviceTax.toFixed(2);
+        if (totalAmount) totalAmount.textContent = total.toFixed(2);
+    }
+
     updatePriceBreakdown() {
         if (!this.currentItem) return;
 
@@ -311,13 +440,23 @@ class OrderingSystem {
     }
 
     async handleOrderSubmission() {
+        console.log('handleOrderSubmission called');
+        
         if (!this.currentItem) {
+            console.error('No current item for ordering');
             this.showNotification('No item selected for ordering', 'error');
             return;
         }
 
         const form = document.getElementById('orderForm');
+        if (!form) {
+            console.error('Order form not found');
+            this.showNotification('Order form not found', 'error');
+            return;
+        }
+        
         if (!form.checkValidity()) {
+            console.log('Form validation failed');
             this.showNotification('Please fill all required fields', 'warning');
             form.reportValidity();
             return;
@@ -346,6 +485,8 @@ class OrderingSystem {
             totalPrice: this.calculateTotal(this.currentItem.price, quantity)
         };
 
+        console.log('Submitting order:', orderData);
+
         try {
             const response = await fetch(`${this.apiBaseUrl}/orders`, {
                 method: 'POST',
@@ -355,8 +496,11 @@ class OrderingSystem {
                 body: JSON.stringify(orderData)
             });
 
+            console.log('Order response status:', response.status);
+
             if (response.ok) {
                 const order = await response.json();
+                console.log('Order placed successfully:', order);
                 this.saveOrderToLocalStorage(order);
                 this.showNotification('Order placed successfully!', 'success');
                 this.closeOrderModal();
@@ -364,6 +508,7 @@ class OrderingSystem {
                 this.updateCartDisplay();
             } else {
                 const errorData = await response.json();
+                console.error('Order failed:', errorData);
                 this.showNotification(errorData.error || 'Failed to place order', 'error');
             }
         } catch (error) {
@@ -438,16 +583,16 @@ class OrderingSystem {
     }
 
     initializeSocket() {
-        // Initialize Socket.IO connection
+        // Initialize Socket.IO connection to unified server
         if (typeof io !== 'undefined') {
-            this.socket = io();
+            this.socket = io('http://localhost:5000');
             
             this.socket.on('connect', () => {
-                console.log('Connected to main server for ordering');
+                console.log('Connected to unified server for ordering');
             });
 
             this.socket.on('disconnect', () => {
-                console.log('Disconnected from main server');
+                console.log('Disconnected from unified server');
             });
 
             // Listen for order updates
@@ -574,5 +719,11 @@ class OrderingSystem {
 
 // Initialize ordering system when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    window.orderingSystem = new OrderingSystem();
+    console.log('Initializing ordering system...');
+    try {
+        window.orderingSystem = new OrderingSystem();
+        console.log('Ordering system initialized successfully:', !!window.orderingSystem);
+    } catch (error) {
+        console.error('Error initializing ordering system:', error);
+    }
 });

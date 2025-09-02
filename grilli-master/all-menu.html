@@ -15,6 +15,7 @@
     - custom css link
   -->
   <link rel="stylesheet" href="./assets/css/style.css">
+  <link rel="stylesheet" href="./assets/css/ordering-system.css">
 
   <!-- 
     - google font link
@@ -636,12 +637,24 @@
               </div>
               ${item.badge ? `<span class="all-menu-card-badge">${item.badge}</span>` : ''}
               <div class="all-menu-card-price">₹${item.price.toFixed(2)}</div>
-              <button class="all-order-btn" onclick="allMenuSystem.orderItem('${item._id}')">
+              <button class="all-order-btn" data-item-id="${item._id}" onclick="allMenuSystem.orderItem('${item._id}')">
                 Order Now
               </button>
             </div>
           </div>
         `).join('');
+        
+        // Add event listeners to order buttons as backup
+        const orderButtons = menuGrid.querySelectorAll('.all-order-btn');
+        orderButtons.forEach(button => {
+          button.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const itemId = button.getAttribute('data-item-id');
+            console.log('Direct button click for item:', itemId);
+            this.orderItem(itemId);
+          });
+        });
       }
 
       filterItems(filter) {
@@ -693,10 +706,10 @@
       }
 
       initializeSocket() {
-        this.socket = io();
+        this.socket = io('http://localhost:5000');
         
         this.socket.on('connect', () => {
-          console.log('Connected to server for all menu updates');
+          console.log('Connected to unified server for all menu updates');
         });
 
         this.socket.on('menu-updated', (data) => {
@@ -748,10 +761,33 @@
       }
 
       orderItem(itemId) {
+        console.log('=== ORDER ITEM CALLED ===');
+        console.log('itemId:', itemId);
+        console.log('window.orderingSystem available:', !!window.orderingSystem);
+        console.log('OrderingSystem class available:', typeof OrderingSystem !== 'undefined');
+        
         if (window.orderingSystem) {
+          console.log('Calling showOrderModal...');
           window.orderingSystem.showOrderModal(itemId);
         } else {
-          this.showMessage('Ordering system not available', 'error');
+          console.error('Ordering system not available, trying to initialize...');
+          // Try to initialize ordering system if not available
+          if (typeof OrderingSystem !== 'undefined') {
+            console.log('Creating new OrderingSystem instance...');
+            window.orderingSystem = new OrderingSystem();
+            setTimeout(() => {
+              if (window.orderingSystem) {
+                console.log('OrderingSystem created, calling showOrderModal...');
+                window.orderingSystem.showOrderModal(itemId);
+              } else {
+                console.error('Failed to create OrderingSystem');
+                this.showMessage('Failed to initialize ordering system', 'error');
+              }
+            }, 100);
+          } else {
+            console.error('OrderingSystem class not available');
+            this.showMessage('Ordering system not available', 'error');
+          }
         }
       }
 
@@ -805,7 +841,22 @@
 
     // Initialize all menu system when DOM is loaded
     document.addEventListener('DOMContentLoaded', () => {
-      window.allMenuSystem = new AllMenuSystem();
+      console.log('DOM loaded, initializing AllMenuSystem...');
+      
+      // Wait for ordering system to be available
+      const initAllMenuSystem = () => {
+        console.log('Checking for ordering system...', !!window.orderingSystem);
+        if (window.orderingSystem) {
+          console.log('Ordering system found, initializing AllMenuSystem');
+          window.allMenuSystem = new AllMenuSystem();
+        } else {
+          console.log('Ordering system not found, waiting...');
+          // Wait a bit more for ordering system to initialize
+          setTimeout(initAllMenuSystem, 100);
+        }
+      };
+      
+      initAllMenuSystem();
     });
   </script>
 

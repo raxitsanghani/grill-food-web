@@ -77,11 +77,11 @@ class AdminDashboard {
     }
 
     initializeSocket() {
-        // Use the same port as the unified server
-        this.socket = io();
+        // Connect to the unified server on port 5000
+        this.socket = io('http://localhost:5000');
         
         this.socket.on('connect', () => {
-            console.log('Connected to admin server');
+            console.log('Connected to unified server on port 5000');
         });
 
         this.socket.on('disconnect', () => {
@@ -740,9 +740,9 @@ class AdminDashboard {
         this.adminToken = null;
         localStorage.removeItem('adminToken');
         this.showNotification('Logged out successfully', 'info');
-        // Redirect to login page
+        // Redirect to selection page
         setTimeout(() => {
-            window.location.href = './index.html';
+            window.location.href = '/';
         }, 1000);
     }
 

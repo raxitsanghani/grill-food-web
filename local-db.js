@@ -144,6 +144,11 @@ class LocalDatabase {
         return items.find(item => item._id === id);
     }
 
+    getMenuItemsByCategory(category) {
+        const items = this.readFile(this.menuItemsPath);
+        return items.filter(item => item.category === category);
+    }
+
     createMenuItem(itemData) {
         const items = this.readFile(this.menuItemsPath);
         

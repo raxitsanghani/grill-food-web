@@ -1,196 +1,129 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grilli - Restaurant Management System</title>
+    <link rel="shortcut icon" href="./grilli-master/favicon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700&family=Forum&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-  <!-- 
-    - primary meta tags
-  -->
-  <title>Grilli - Welcome</title>
-  <meta name="title" content="Grilli - Amazing & Delicious Food">
-  <meta name="description" content="Welcome to Grilli Restaurant - Choose your experience">
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+            min-height: 100vh;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-  <!-- 
-    - favicon
-  -->
-  <link rel="shortcut icon" href="./grilli-master/favicon.svg" type="image/svg+xml">
+        .container {
+            text-align: center;
+            max-width: 800px;
+            padding: 2rem;
+        }
 
-  <!-- 
-    - google font link
-  -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700&family=Forum&display=swap" rel="stylesheet">
+        .logo {
+            width: 200px;
+            height: auto;
+            margin-bottom: 2rem;
+            filter: brightness(0) saturate(100%) invert(83%) sepia(31%) saturate(638%) hue-rotate(359deg) brightness(103%) contrast(107%);
+        }
 
-  <!-- 
-    - custom css link
-  -->
-  <link rel="stylesheet" href="./grilli-master/assets/css/style.css">
-  
-  <style>
-    .selection-container {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-      padding: 20px;
-    }
+        h1 {
+            font-family: 'Forum', cursive;
+            font-size: 4rem;
+            color: #D4AF37;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
 
-    .selection-content {
-      text-align: center;
-      max-width: 600px;
-      width: 100%;
-    }
+        p {
+            font-size: 1.2rem;
+            color: #a0a0a0;
+            margin-bottom: 3rem;
+            line-height: 1.6;
+        }
 
-    .selection-logo {
-      margin-bottom: 40px;
-    }
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
 
-    .selection-logo img {
-      width: 200px;
-      height: auto;
-    }
+        .btn {
+            background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+            border: 2px solid #D4AF37;
+            border-radius: 20px;
+            padding: 2rem;
+            text-decoration: none;
+            color: white;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
 
-    .selection-title {
-      font-family: var(--fontFamily-forum);
-      font-size: var(--fontSize-headline-1);
-      color: var(--gold-crayola);
-      margin-bottom: 20px;
-      font-weight: var(--weight-bold);
-    }
+        .btn:hover {
+            background: #D4AF37;
+            color: #0a0a0a;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(212, 175, 55, 0.3);
+        }
 
-    .selection-subtitle {
-      font-size: var(--fontSize-body-2);
-      color: var(--quick-silver);
-      margin-bottom: 60px;
-      line-height: var(--lineHeight-5);
-    }
+        .btn-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
 
-    .selection-buttons {
-      display: flex;
-      gap: 30px;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
+        .btn h2 {
+            font-family: 'Forum', cursive;
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+        }
 
-    .selection-btn {
-      background: linear-gradient(135deg, var(--gold-crayola) 0%, #d4af37 100%);
-      color: var(--smoky-black-1);
-      border: none;
-      padding: 20px 40px;
-      border-radius: 12px;
-      font-size: var(--fontSize-body-2);
-      font-weight: var(--weight-bold);
-      cursor: pointer;
-      transition: all 0.3s ease;
-      text-decoration: none;
-      display: inline-block;
-      min-width: 200px;
-      box-shadow: 0 8px 25px rgba(212, 175, 55, 0.3);
-      position: relative;
-      overflow: hidden;
-    }
+        .btn p {
+            font-size: 1rem;
+            margin-bottom: 0;
+        }
 
-    .selection-btn:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 12px 35px rgba(212, 175, 55, 0.4);
-    }
-
-    .selection-btn:active {
-      transform: translateY(-1px);
-    }
-
-    .selection-btn::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-      transition: left 0.5s;
-    }
-
-    .selection-btn:hover::before {
-      left: 100%;
-    }
-
-    .btn-icon {
-      font-size: 24px;
-      margin-right: 10px;
-    }
-
-    .selection-footer {
-      margin-top: 60px;
-      color: var(--quick-silver);
-      font-size: var(--fontSize-label-2);
-    }
-
-    .selection-footer a {
-      color: var(--gold-crayola);
-      text-decoration: none;
-    }
-
-    .selection-footer a:hover {
-      text-decoration: underline;
-    }
-
-    @media (max-width: 768px) {
-      .selection-buttons {
-        flex-direction: column;
-        align-items: center;
-      }
-      
-      .selection-btn {
-        min-width: 250px;
-      }
-      
-      .selection-title {
-        font-size: var(--fontSize-title-1);
-      }
-    }
-  </style>
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 3rem;
+            }
+            
+            .buttons {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
-
 <body>
-  <div class="selection-container">
-    <div class="selection-content">
-      <div class="selection-logo">
-        <img src="./grilli-master/assets/images/logo.svg" alt="Grilli - Amazing & Delicious Food">
-      </div>
-      
-      <h1 class="selection-title">Welcome to Grilli</h1>
-      <p class="selection-subtitle">
-        Experience amazing & delicious food with our premium restaurant services. 
-        Choose your preferred experience below.
-      </p>
-      
-      <div class="selection-buttons">
-        <a href="/user" class="selection-btn">
-          <span class="btn-icon">🍽️</span>
-          User Web
-        </a>
+    <div class="container">
+        <img src="./grilli-master/assets/images/logo.svg" alt="Grilli Logo" class="logo">
+        <h1>Grilli</h1>
+        <p>Welcome to Grilli Restaurant Management System. Choose your access level to continue.</p>
         
-        <a href="/admin-login" class="selection-btn">
-          <span class="btn-icon">👨‍💼</span>
-          Admin Web
-        </a>
-      </div>
-      
-      <div class="selection-footer">
-        <p>
-          <strong>Contact:</strong> 
-          <a href="tel:+919510261149">+91 9510261149</a> | 
-          <a href="mailto:raxitsanghani@gmail.com">raxitsanghani@gmail.com</a>
-        </p>
-        <p>CG Road, Navrangpura, Ahmedabad 380009, Gujarat, India</p>
-      </div>
+        <div class="buttons">
+            <a href="/user" class="btn">
+                <div class="btn-icon">🍽️</div>
+                <h2>User Web</h2>
+                <p>Browse menu, place orders, and enjoy our delicious food</p>
+            </a>
+            
+            <a href="/admin" class="btn">
+                <div class="btn-icon">⚙️</div>
+                <h2>Admin Web</h2>
+                <p>Manage menu items, process orders, and oversee operations</p>
+            </a>
+        </div>
     </div>
-  </div>
 </body>
-
 </html>

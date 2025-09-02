@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background-color: #0056b3; }
+        .admin-credentials {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Admin Panel Test</h1>
+    
+    <div class="test-section">
+        <h2>Server Status</h2>
+        <div id="serverStatus" class="status info">Checking server status...</div>
+        <button onclick="checkServerStatus()">Check Server Status</button>
+    </div>
+
+    <div class="test-section">
+        <h2>Admin Panel Access</h2>
+        <div id="adminPanelStatus" class="status info">Testing admin panel access...</div>
+        <button onclick="testAdminPanel()">Test Admin Panel</button>
+        <button onclick="openAdminPanel()">Open Admin Panel</button>
+    </div>
+
+    <div class="test-section">
+        <h2>Admin Login Credentials</h2>
+        <div class="admin-credentials">
+            <h3>Available Admin Accounts:</h3>
+            <p><strong>Email:</strong> rajpatel22@gmail.com</p>
+            <p><strong>Password:</strong> (use the password you set)</p>
+            <p><strong>Security Key:</strong> 123456</p>
+            <hr>
+            <p><strong>Email:</strong> meet@gmail.com</p>
+            <p><strong>Password:</strong> (use the password you set)</p>
+            <p><strong>Security Key:</strong> 123456</p>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Socket Connection Test</h2>
+        <div id="socketStatus" class="status info">Testing socket connection...</div>
+        <button onclick="testSocketConnection()">Test Socket Connection</button>
+    </div>
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script>
+        async function checkServerStatus() {
+            const statusDiv = document.getElementById('serverStatus');
+            statusDiv.textContent = 'Checking...';
+            statusDiv.className = 'status info';
+
+            try {
+                // Test main server
+                const mainResponse = await fetch('http://localhost:4000/api/health');
+                const mainData = await mainResponse.json();
+                
+                // Test admin server
+                const adminResponse = await fetch('http://localhost:4001/api/admin/health');
+                const adminData = await adminResponse.json();
+
+                statusDiv.innerHTML = `
+                    <strong>✅ Both servers are running!</strong><br>
+                    Main Server (4000): ${mainData.status}<br>
+                    Admin Server (4001): ${adminData.status}
+                `;
+                statusDiv.className = 'status success';
+            } catch (error) {
+                statusDiv.innerHTML = `<strong>❌ Server Error:</strong> ${error.message}`;
+                statusDiv.className = 'status error';
+            }
+        }
+
+        async function testAdminPanel() {
+            const statusDiv = document.getElementById('adminPanelStatus');
+            statusDiv.textContent = 'Testing...';
+            statusDiv.className = 'status info';
+
+            try {
+                const response = await fetch('http://localhost:4001/admin');
+                if (response.ok) {
+                    statusDiv.innerHTML = '<strong>✅ Admin Panel is accessible!</strong><br>Status: 200 OK';
+                    statusDiv.className = 'status success';
+                } else {
+                    statusDiv.innerHTML = `<strong>❌ Admin Panel Error:</strong> Status ${response.status}`;
+                    statusDiv.className = 'status error';
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `<strong>❌ Connection Error:</strong> ${error.message}`;
+                statusDiv.className = 'status error';
+            }
+        }
+
+        function openAdminPanel() {
+            window.open('http://localhost:4001/admin', '_blank');
+        }
+
+        function testSocketConnection() {
+            const statusDiv = document.getElementById('socketStatus');
+            statusDiv.textContent = 'Connecting to socket...';
+            statusDiv.className = 'status info';
+
+            try {
+                const socket = io('http://localhost:4001');
+                
+                socket.on('connect', () => {
+                    statusDiv.innerHTML = '<strong>✅ Socket Connected!</strong><br>Connected to admin server on port 4001';
+                    statusDiv.className = 'status success';
+                });
+
+                socket.on('disconnect', () => {
+                    statusDiv.innerHTML = '<strong>⚠️ Socket Disconnected</strong>';
+                    statusDiv.className = 'status error';
+                });
+
+                socket.on('connect_error', (error) => {
+                    statusDiv.innerHTML = `<strong>❌ Socket Connection Error:</strong> ${error.message}`;
+                    statusDiv.className = 'status error';
+                });
+
+                // Timeout after 5 seconds
+                setTimeout(() => {
+                    if (socket.disconnected) {
+                        statusDiv.innerHTML = '<strong>⏰ Connection Timeout</strong><br>Socket connection took too long';
+                        statusDiv.className = 'status error';
+                    }
+                }, 5000);
+
+            } catch (error) {
+                statusDiv.innerHTML = `<strong>❌ Socket Error:</strong> ${error.message}`;
+                statusDiv.className = 'status error';
+            }
+        }
+
+        // Auto-run tests on page load
+        window.addEventListener('load', () => {
+            checkServerStatus();
+            testAdminPanel();
+        });
+    </script>
+</body>
+</html>

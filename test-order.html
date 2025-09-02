@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Order System</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-button { 
+            background: #ff6b35; 
+            color: white; 
+            padding: 10px 20px; 
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            margin: 10px;
+        }
+        .test-button:hover { background: #e55a2b; }
+        .log { 
+            background: #f5f5f5; 
+            padding: 10px; 
+            margin: 10px 0; 
+            border-radius: 5px; 
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>Order System Test</h1>
+    
+    <button class="test-button" onclick="testOrderSystem()">Test Order System</button>
+    <button class="test-button" onclick="testAPI()">Test API</button>
+    <button class="test-button" onclick="clearLog()">Clear Log</button>
+    
+    <div id="log" class="log"></div>
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="grilli-master/assets/js/ordering-system.js"></script>
+    
+    <script>
+        function log(message) {
+            const logDiv = document.getElementById('log');
+            logDiv.textContent += new Date().toLocaleTimeString() + ': ' + message + '\n';
+            console.log(message);
+        }
+
+        function clearLog() {
+            document.getElementById('log').textContent = '';
+        }
+
+        function testOrderSystem() {
+            log('Testing order system...');
+            log('window.orderingSystem available: ' + !!window.orderingSystem);
+            
+            if (window.orderingSystem) {
+                log('Ordering system found, testing showOrderModal...');
+                // Test with a sample item ID
+                window.orderingSystem.showOrderModal('test-item-id');
+            } else {
+                log('Ordering system not found!');
+            }
+        }
+
+        function testAPI() {
+            log('Testing API...');
+            fetch('http://localhost:5000/api/menu-items')
+                .then(response => response.json())
+                .then(data => {
+                    log('API response: ' + JSON.stringify(data.slice(0, 2), null, 2));
+                })
+                .catch(error => {
+                    log('API error: ' + error.message);
+                });
+        }
+
+        // Test on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            log('Page loaded');
+            log('Socket.IO available: ' + (typeof io !== 'undefined'));
+            log('OrderingSystem class available: ' + (typeof OrderingSystem !== 'undefined'));
+            
+            // Wait a bit for ordering system to initialize
+            setTimeout(() => {
+                log('After timeout - orderingSystem available: ' + !!window.orderingSystem);
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

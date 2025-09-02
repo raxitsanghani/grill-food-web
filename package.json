@@ -4,8 +4,8 @@
   "description": "Grilli Restaurant Website with Authentication",
   "main": "unified-server.js",
   "scripts": {
-    "start": "node render-start.js",
-    "dev": "nodemon server.js",
+    "start": "node unified-server.js",
+    "dev": "nodemon unified-server.js",
     "admin": "node admin-server.js",
     "dev:admin": "nodemon admin-server.js",
     "start:all": "node start-servers.js",

@@ -148,9 +148,11 @@ class LoginSystem {
                 this.userToken = data.token;
                 this.currentUser = data.user;
                 
-                // Save to localStorage
+                // Save to localStorage with consistent keys
                 localStorage.setItem('userToken', this.userToken);
                 localStorage.setItem('userData', JSON.stringify(this.currentUser));
+                localStorage.setItem('isLoggedIn', 'true');
+                localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
                 
                 this.showNotification('Login successful!');
                 this.hideLogin();
@@ -233,14 +235,19 @@ class LoginSystem {
         this.showNotification('Logged out successfully');
         this.updateUIAfterLogout();
         // Redirect to selection page
-        window.location.href = '/';
+        setTimeout(() => {
+            window.location.href = '/';
+        }, 1000);
     }
 
     clearUserData() {
         this.currentUser = null;
         this.userToken = null;
+        // Clear all user-related localStorage keys
         localStorage.removeItem('userToken');
         localStorage.removeItem('userData');
+        localStorage.removeItem('isLoggedIn');
+        localStorage.removeItem('currentUser');
     }
 
     updateUIAfterLogin() {
