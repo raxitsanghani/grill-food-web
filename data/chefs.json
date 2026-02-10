@@ -1,0 +1,131 @@
+[
+  {
+    "_id": "chef_002",
+    "fullName": "Chef Priya Sharma",
+    "profilePhoto": "data:image/webp;base64,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",
+    "experience": "12 years",
+    "specialties": [
+      "Indian Cuisine",
+      "Tandoor Cooking",
+      "Spice Blending",
+      "Vegetarian Specialties"
+    ],
+    "bio": "Expert in traditional Indian cooking techniques with a modern twist. Specializes in authentic North Indian cuisine.",
+    "rating": 4.8,
+    "status": "active",
+    "createdAt": "2024-01-16T10:00:00.000Z",
+    "updatedAt": "2025-09-24T09:36:28.067Z"
+  },
+  {
+    "_id": "chef_003",
+    "fullName": "Chef James Wilson",
+    "profilePhoto": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face",
+    "experience": "18 years",
+    "specialties": [
+      "French Cuisine",
+      "Sous Vide",
+      "Pastry Arts",
+      "Wine Pairing"
+    ],
+    "bio": "Classically trained French chef with extensive experience in fine dining establishments across Europe and Asia.",
+    "rating": 4.9,
+    "status": "active",
+    "createdAt": "2024-01-17T10:00:00.000Z"
+  },
+  {
+    "_id": "chef_004",
+    "fullName": "Chef Akira Tanaka",
+    "profilePhoto": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face",
+    "experience": "14 years",
+    "specialties": [
+      "Japanese Cuisine",
+      "Sushi Making",
+      "Ramen",
+      "Tea Ceremony"
+    ],
+    "bio": "Master sushi chef trained in Tokyo with expertise in traditional Japanese cooking and modern fusion techniques.",
+    "rating": 4.9,
+    "status": "active",
+    "createdAt": "2024-01-18T10:00:00.000Z"
+  },
+  {
+    "_id": "chef_005",
+    "fullName": "Chef Maria Garcia",
+    "profilePhoto": "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop&crop=face",
+    "experience": "11 years",
+    "specialties": [
+      "Mexican Cuisine",
+      "Mole Making",
+      "Taco Artistry",
+      "Salsa Crafting"
+    ],
+    "bio": "Passionate about authentic Mexican flavors and traditional cooking methods passed down through generations.",
+    "rating": 4.7,
+    "status": "active",
+    "createdAt": "2024-01-19T10:00:00.000Z"
+  },
+  {
+    "_id": "chef_006",
+    "fullName": "Chef David Chen",
+    "profilePhoto": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop&crop=face",
+    "experience": "16 years",
+    "specialties": [
+      "Chinese Cuisine",
+      "Dim Sum",
+      "Wok Cooking",
+      "Szechuan Spices"
+    ],
+    "bio": "Expert in authentic Chinese cooking with specialization in Cantonese and Szechuan cuisines.",
+    "rating": 4.8,
+    "status": "active",
+    "createdAt": "2024-01-20T10:00:00.000Z"
+  },
+  {
+    "_id": "chef_007",
+    "fullName": "Chef Sarah Johnson",
+    "profilePhoto": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=400&fit=crop&crop=face",
+    "experience": "13 years",
+    "specialties": [
+      "Mediterranean Cuisine",
+      "Grilling",
+      "Olive Oil Pairing",
+      "Fresh Seafood"
+    ],
+    "bio": "Specialist in Mediterranean flavors with focus on fresh, healthy ingredients and traditional cooking methods.",
+    "rating": 4.8,
+    "status": "active",
+    "createdAt": "2024-01-21T10:00:00.000Z"
+  },
+  {
+    "_id": "chef_008",
+    "fullName": "Chef Raj Patel",
+    "profilePhoto": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&h=400&fit=crop&crop=face",
+    "experience": "20 years",
+    "specialties": [
+      "Gujarati Cuisine",
+      "Street Food",
+      "Thali Preparation",
+      "Festival Specials"
+    ],
+    "bio": "Master of traditional Gujarati cuisine with expertise in authentic thali preparation and festival specialties.",
+    "rating": 4.9,
+    "status": "active",
+    "createdAt": "2024-01-22T10:00:00.000Z"
+  },
+  {
+    "_id": "chef_009",
+    "fullName": "Chef Isabella Rodriguez",
+    "profilePhoto": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&h=400&fit=crop&crop=face",
+    "experience": "10 years",
+    "specialties": [
+      "Fusion Cuisine",
+      "Molecular Gastronomy",
+      "Plating Art",
+      "Modern Techniques"
+    ],
+    "bio": "Innovative chef specializing in fusion cuisine and modern cooking techniques with artistic presentation.",
+    "rating": 4.7,
+    "status": "active",
+    "createdAt": "2024-01-23T10:00:00.000Z"
+  }
+]

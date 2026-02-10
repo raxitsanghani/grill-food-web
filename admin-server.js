@@ -6,6 +6,20 @@ const jwt = require('jsonwebtoken');
 const http = require('http');
 const socketIo = require('socket.io');
 const LocalDatabase = require('./local-db');
+let db;
+try {
+  if (process.env.MONGODB_URI || process.env.MONGO_URL) {
+    const MongoDatabase = require('./services/mongo-db');
+    db = new MongoDatabase();
+    console.log('✅ MongoDB mode enabled (admin)');
+  } else {
+    db = new LocalDatabase();
+    console.log('ℹ️  Using Local JSON Database (admin)');
+  }
+} catch (e) {
+  console.warn('⚠️  MongoDB init failed (admin), falling back to Local JSON DB:', e.message);
+  db = new LocalDatabase();
+}
 require('dotenv').config();
 
 const ADMIN_PORT = process.env.ADMIN_PORT || 4001;
@@ -20,8 +34,7 @@ const io = socketIo(server, {
     }
 });
 
-// Initialize local database
-const db = new LocalDatabase();
+// Database initialized above (MongoDB or Local JSON)
 
 // Middleware
 app.use(cors());
@@ -282,22 +295,6 @@ app.post('/api/admin/menu-items', authenticateAdmin, async (req, res) => {
         // Emit to admin clients
         io.emit('menu-updated', { action: 'item-added', item: menuItem });
         
-        // Also emit to main server for user updates
-        try {
-            const mainServerResponse = await fetch('http://localhost:4000/api/menu-update', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ action: 'item-added', item: menuItem })
-            });
-            if (mainServerResponse.ok) {
-                console.log('Menu update sent to main server');
-            }
-        } catch (error) {
-            console.log('Could not send update to main server:', error.message);
-        }
-        
         res.status(201).json(menuItem);
     } catch (error) {
         console.error('Menu item creation error:', error);
@@ -353,22 +350,6 @@ app.put('/api/admin/menu-items/:id', authenticateAdmin, async (req, res) => {
         // Emit to admin clients
         io.emit('menu-updated', { action: 'item-updated', item: menuItem });
         
-        // Also emit to main server for user updates
-        try {
-            const mainServerResponse = await fetch('http://localhost:4000/api/menu-update', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ action: 'item-updated', item: menuItem })
-            });
-            if (mainServerResponse.ok) {
-                console.log('Menu update sent to main server');
-            }
-        } catch (error) {
-            console.log('Could not send update to main server:', error.message);
-        }
-        
         res.json(menuItem);
     } catch (error) {
         console.error('Error updating menu item:', error);
@@ -385,22 +366,6 @@ app.delete('/api/admin/menu-items/:id', authenticateAdmin, async (req, res) => {
         
         // Emit to admin clients
         io.emit('menu-updated', { action: 'item-deleted', itemId: req.params.id });
-        
-        // Also emit to main server for user updates
-        try {
-            const mainServerResponse = await fetch('http://localhost:4000/api/menu-update', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ action: 'item-deleted', itemId: req.params.id })
-            });
-            if (mainServerResponse.ok) {
-                console.log('Menu update sent to main server');
-            }
-        } catch (error) {
-            console.log('Could not send update to main server:', error.message);
-        }
         
         res.json({ message: 'Menu item deleted successfully' });
     } catch (error) {
@@ -436,30 +401,6 @@ app.put('/api/admin/orders/:id/status', authenticateAdmin, async (req, res) => {
         // Emit to admin clients
         io.emit('order-status-updated', { orderId: req.params.id, status, adminNotes, order });
 
-        // Also emit to main server for user clients
-        try {
-            const mainServerResponse = await fetch('http://localhost:4000/api/order-status-update', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    orderId: req.params.id,
-                    status,
-                    adminNotes,
-                    order
-                })
-            });
-            
-            if (mainServerResponse.ok) {
-                console.log('✅ Order status update broadcasted to main server');
-            } else {
-                console.log('⚠️ Failed to broadcast to main server');
-            }
-        } catch (error) {
-            console.log('⚠️ Could not reach main server for broadcast');
-        }
-
         res.json(order);
     } catch (error) {
         console.error('Order status update error:', error);
@@ -477,6 +418,128 @@ app.get('/api/admin/dashboard-stats', authenticateAdmin, async (req, res) => {
     }
 });
 
+// -----------------------------
+// Chefs API (used by Admin UI)
+// -----------------------------
+app.get('/api/chefs', (req, res) => {
+    try {
+        const chefs = db.getAllChefs();
+        res.json(chefs);
+    } catch (error) {
+        console.error('Error fetching chefs:', error);
+        res.status(500).json({ error: 'Failed to fetch chefs' });
+    }
+});
+
+app.get('/api/chefs/active', (req, res) => {
+    try {
+        const chefs = db.getActiveChefs();
+        res.json(chefs);
+    } catch (error) {
+        console.error('Error fetching active chefs:', error);
+        res.status(500).json({ error: 'Failed to fetch active chefs' });
+    }
+});
+
+app.get('/api/chefs/:id', (req, res) => {
+    try {
+        const chef = db.getChefById(req.params.id);
+        if (chef) {
+            res.json(chef);
+        } else {
+            res.status(404).json({ error: 'Chef not found' });
+        }
+    } catch (error) {
+        console.error('Error fetching chef:', error);
+        res.status(500).json({ error: 'Failed to fetch chef' });
+    }
+});
+
+app.post('/api/chefs', (req, res) => {
+    try {
+        let { fullName, profilePhoto, experience, specialties, bio, rating, status } = req.body || {};
+
+        fullName = typeof fullName === 'string' ? fullName.trim() : '';
+        experience = typeof experience === 'string' ? experience.trim() : experience;
+        bio = typeof bio === 'string' ? bio.trim() : bio;
+        status = typeof status === 'string' ? status.trim() : status;
+
+        if (!fullName || !experience) {
+            return res.status(400).json({ error: 'Full name and experience are required' });
+        }
+
+        if (typeof specialties === 'string') {
+            specialties = specialties.split(',').map(s => s.trim()).filter(Boolean);
+        }
+        if (!Array.isArray(specialties)) specialties = [];
+
+        const parsedRating = Number(rating);
+        rating = Number.isFinite(parsedRating) ? Math.min(5, Math.max(1, parsedRating)) : 4.5;
+
+        const chef = db.createChef({
+            fullName,
+            profilePhoto,
+            experience,
+            specialties,
+            bio: bio || '',
+            rating,
+            status: status || 'active'
+        });
+
+        if (chef) return res.status(201).json(chef);
+        return res.status(500).json({ error: 'Failed to create chef' });
+    } catch (error) {
+        console.error('Error creating chef:', error);
+        return res.status(500).json({ error: 'Failed to create chef' });
+    }
+});
+
+app.put('/api/chefs/:id', (req, res) => {
+    try {
+        let { fullName, profilePhoto, experience, specialties, bio, rating, status } = req.body || {};
+
+        const updates = {};
+        if (typeof fullName === 'string' && fullName.trim()) updates.fullName = fullName.trim();
+        if (profilePhoto) updates.profilePhoto = profilePhoto;
+        if (typeof experience === 'string' && experience.trim()) updates.experience = experience.trim();
+
+        if (specialties !== undefined) {
+            if (typeof specialties === 'string') {
+                specialties = specialties.split(',').map(s => s.trim()).filter(Boolean);
+            }
+            updates.specialties = Array.isArray(specialties) ? specialties : [];
+        }
+
+        if (bio !== undefined) updates.bio = typeof bio === 'string' ? bio.trim() : bio;
+
+        if (rating !== undefined) {
+            const parsedRating = Number(rating);
+            if (Number.isFinite(parsedRating)) {
+                updates.rating = Math.min(5, Math.max(1, parsedRating));
+            }
+        }
+
+        if (typeof status === 'string' && status.trim()) updates.status = status.trim();
+
+        const chef = db.updateChef(req.params.id, updates);
+        if (chef) return res.json(chef);
+        return res.status(404).json({ error: 'Chef not found' });
+    } catch (error) {
+        console.error('Error updating chef:', error);
+        return res.status(500).json({ error: 'Failed to update chef' });
+    }
+});
+
+app.delete('/api/chefs/:id', (req, res) => {
+    try {
+        const success = db.deleteChef(req.params.id);
+        if (success) return res.json({ message: 'Chef deleted successfully' });
+        return res.status(404).json({ error: 'Chef not found' });
+    } catch (error) {
+        console.error('Error deleting chef:', error);
+        return res.status(500).json({ error: 'Failed to delete chef' });
+    }
+});
 
 
 // Listen for new orders from main server

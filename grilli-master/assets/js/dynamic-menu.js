@@ -35,14 +35,31 @@ class DynamicMenu {
         try {
             const response = await fetch(`${this.apiBaseUrl}/menu-items`);
             if (response.ok) {
-                this.menuItems = await response.json();
-                console.log('DynamicMenu: Loaded', this.menuItems.length, 'menu items');
+                const items = await response.json();
+                // Use deduplication utility if available
+                if (window.DeduplicationUtil) {
+                    this.menuItems = window.DeduplicationUtil.dedupeMenuItems(items);
+                } else {
+                    // Fallback deduplication
+                    const seen = new Map();
+                    this.menuItems = items.filter(item => {
+                        if (!item || !item._id) return false;
+                        const id = item._id.toString();
+                        if (seen.has(id)) return false;
+                        seen.set(id, true);
+                        return true;
+                    });
+                }
             } else {
-                console.error('DynamicMenu: Failed to load menu items from API');
                 this.menuItems = [];
             }
         } catch (error) {
-            console.error('DynamicMenu: Error loading menu items:', error);
+            const errorMessage = window.ErrorHandler ? 
+                window.ErrorHandler.handleError(error, 'Menu Loading') :
+                'Failed to load menu items';
+            if (window.showNotification) {
+                window.showNotification(errorMessage, 'error');
+            }
             this.menuItems = [];
         }
     }

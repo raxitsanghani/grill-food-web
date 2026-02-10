@@ -14,6 +14,61 @@ class OrdersPage {
     this.displayOrders();
     this.setupLogoutButton();
     this.initializeSocket();
+    this.addRippleEffects();
+    this.setupScrollAnimations();
+  }
+
+  /**
+   * Add ripple effects to buttons
+   */
+  addRippleEffects() {
+    document.addEventListener('click', (e) => {
+      const button = e.target.closest('.order-actions .btn');
+      if (button) {
+        const ripple = document.createElement('span');
+        ripple.className = 'ripple';
+        const rect = button.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        const x = e.clientX - rect.left - size / 2;
+        const y = e.clientY - rect.top - size / 2;
+        
+        ripple.style.width = ripple.style.height = `${size}px`;
+        ripple.style.left = `${x}px`;
+        ripple.style.top = `${y}px`;
+        
+        button.appendChild(ripple);
+        
+        setTimeout(() => {
+          ripple.remove();
+        }, 600);
+      }
+    });
+  }
+
+  /**
+   * Setup scroll animations for order cards
+   */
+  setupScrollAnimations() {
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.animationPlayState = 'running';
+          observer.unobserve(entry.target);
+        }
+      });
+    }, observerOptions);
+
+    // Observe all order cards
+    setTimeout(() => {
+      document.querySelectorAll('.order-card').forEach(card => {
+        observer.observe(card);
+      });
+    }, 100);
   }
 
   setupLogoutButton() {
@@ -57,19 +112,58 @@ class OrdersPage {
   }
 
   displayOrders() {
+    const ordersContainer = document.querySelector('.orders-container');
     const ordersList = document.getElementById('ordersList');
-    const noOrders = document.getElementById('noOrders');
 
     if (this.orders.length === 0) {
-      ordersList.style.display = 'none';
-      noOrders.style.display = 'block';
+      // Use empty state manager if available
+      if (window.emptyStateManager && ordersContainer) {
+        window.emptyStateManager.show('orders-container', 'orders');
+      } else {
+        // Fallback to original implementation
+        const noOrders = document.getElementById('noOrders');
+        if (noOrders) {
+          ordersList.style.display = 'none';
+          noOrders.style.display = 'block';
+        }
+      }
       return;
     }
 
-    ordersList.style.display = 'block';
-    noOrders.style.display = 'none';
+    // Hide empty state if using manager
+    if (window.emptyStateManager && ordersContainer) {
+      window.emptyStateManager.hide('orders-container');
+    } else {
+      const noOrders = document.getElementById('noOrders');
+      if (noOrders) {
+        noOrders.style.display = 'none';
+      }
+    }
 
-    ordersList.innerHTML = this.orders.map(order => this.createOrderCard(order)).join('');
+    ordersList.style.display = 'block';
+    
+    // Show skeleton loader while rendering
+    if (window.skeletonLoader) {
+      window.skeletonLoader.show('ordersList', 'orderCard', 3);
+      setTimeout(() => {
+        ordersList.innerHTML = this.orders.map(order => this.createOrderCard(order)).join('');
+        this.animateOrdersIn();
+      }, 300);
+    } else {
+      ordersList.innerHTML = this.orders.map(order => this.createOrderCard(order)).join('');
+      this.animateOrdersIn();
+    }
+  }
+
+  /**
+   * Animate orders in with stagger effect
+   */
+  animateOrdersIn() {
+    const orderCards = document.querySelectorAll('.order-card');
+    orderCards.forEach((card, index) => {
+      card.style.animationDelay = `${index * 0.1}s`;
+      card.classList.add('order-card-animated');
+    });
   }
 
   createOrderCard(order) {
@@ -84,7 +178,14 @@ class OrdersPage {
 
     const status = this.getOrderStatus(order);
     const statusClass = this.getStatusClass(status);
-    
+
+    // Create timeline if available
+    let timelineHTML = '';
+    if (window.OrderTrackingTimeline) {
+      const timeline = new OrderTrackingTimeline();
+      timelineHTML = `<div class="order-timeline-container">${timeline.createTimeline({ ...order, status })}</div>`;
+    }
+
     return `
       <div class="order-card food-order">
         <div class="order-header">
@@ -95,6 +196,8 @@ class OrdersPage {
           </div>
           <div class="order-status ${statusClass}">${status}</div>
         </div>
+
+        ${timelineHTML}
 
         <div class="order-details">
           ${this.createFoodOrderDetails(order)}

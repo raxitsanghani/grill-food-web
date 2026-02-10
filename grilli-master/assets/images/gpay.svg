@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="40" viewBox="0 0 120 40">
+  <!-- Simplified GPay mark (official logos are trademarked) -->
+  <rect width="120" height="40" rx="6" fill="#ffffff"/>
+  <g transform="translate(8,8) scale(0.6)">
+    <path d="M10 10h8v8h-8z" fill="#4285F4"/>
+    <path d="M18 10h8v8h-8z" fill="#34A853"/>
+    <path d="M10 18h8v8h-8z" fill="#FBBC05"/>
+    <path d="M18 18h8v8h-8z" fill="#EA4335"/>
+  </g>
+</svg>

@@ -4,10 +4,11 @@ class OrderingSystem {
         this.cart = [];
         this.currentItem = null;
         this.gstRate = 0.18; // 18% GST
-        this.deliveryCharge = 40; // Fixed delivery charge
+        this.deliveryCharge = 40; // Fixed delivery charge ₹40
         this.apiBaseUrl = '/api';
         this.socket = null;
         this.isDarkTheme = true; // Set dark theme as default
+        this.priceCalculator = window.PriceCalculator || null;
         this.init();
     }
 
@@ -309,15 +310,15 @@ class OrderingSystem {
                                     </div>
                                     <div class="summary-row">
                                         <span>Delivery Fee:</span>
-                                        <span>₹<span id="deliveryFee">30</span></span>
+                                        <span>₹<span id="deliveryFee">40.00</span></span>
                                     </div>
                                     <div class="summary-row">
-                                        <span>Service Tax (5%):</span>
-                                        <span>₹<span id="serviceTax">${(item.price * 0.05).toFixed(2)}</span></span>
+                                        <span>GST (18%):</span>
+                                        <span>₹<span id="serviceTax">${(item.price * 0.18).toFixed(2)}</span></span>
                                     </div>
                                     <div class="summary-row total">
                                         <span>Total Amount:</span>
-                                        <span>₹<span id="totalAmount">${(item.price + 30 + (item.price * 0.05)).toFixed(2)}</span></span>
+                                        <span>₹<span id="totalAmount">${(item.price + 40 + (item.price * 0.18)).toFixed(2)}</span></span>
                                     </div>
                                 </div>
                             </div>
@@ -402,21 +403,45 @@ class OrderingSystem {
         if (!this.currentItem) return;
         
         const quantity = parseInt(document.getElementById('quantity')?.value) || 1;
-        const itemPrice = this.currentItem.price;
-        const deliveryFee = 30;
-        const serviceTax = (itemPrice * quantity) * 0.05;
-        const total = (itemPrice * quantity) + deliveryFee + serviceTax;
+        
+        // Use unified price calculator if available
+        let priceBreakdown;
+        if (this.priceCalculator) {
+            priceBreakdown = this.priceCalculator.calculateOrderTotal(this.currentItem.price, quantity);
+        } else {
+            // Fallback calculation
+            const subtotal = this.currentItem.price * quantity;
+            const gstAmount = subtotal * this.gstRate;
+            priceBreakdown = {
+                subtotal: subtotal,
+                gstAmount: gstAmount,
+                deliveryCharge: this.deliveryCharge,
+                total: subtotal + gstAmount + this.deliveryCharge,
+                quantity: quantity
+            };
+        }
 
         // Update summary elements
         const summaryQuantity = document.getElementById('summaryQuantity');
         const summaryItemPrice = document.getElementById('summaryItemPrice');
+        const deliveryFeeElement = document.getElementById('deliveryFee');
         const serviceTaxElement = document.getElementById('serviceTax');
+        const gstAmountElement = document.getElementById('gstAmount');
         const totalAmount = document.getElementById('totalAmount');
 
-        if (summaryQuantity) summaryQuantity.textContent = quantity;
-        if (summaryItemPrice) summaryItemPrice.textContent = (itemPrice * quantity).toFixed(2);
-        if (serviceTaxElement) serviceTaxElement.textContent = serviceTax.toFixed(2);
-        if (totalAmount) totalAmount.textContent = total.toFixed(2);
+        if (summaryQuantity) summaryQuantity.textContent = priceBreakdown.quantity;
+        if (summaryItemPrice) summaryItemPrice.textContent = priceBreakdown.subtotal.toFixed(2);
+        if (deliveryFeeElement) deliveryFeeElement.textContent = priceBreakdown.deliveryCharge.toFixed(2);
+        if (serviceTaxElement) {
+            // Update label and value to show GST instead of Service Tax
+            serviceTaxElement.textContent = priceBreakdown.gstAmount.toFixed(2);
+            const serviceTaxLabel = serviceTaxElement.previousElementSibling;
+            if (serviceTaxLabel && serviceTaxLabel.tagName === 'SPAN') {
+                serviceTaxLabel.textContent = 'GST (18%):';
+            }
+        }
+        if (gstAmountElement) gstAmountElement.textContent = priceBreakdown.gstAmount.toFixed(2);
+        if (totalAmount) totalAmount.textContent = priceBreakdown.total.toFixed(2);
     }
 
     updatePriceBreakdown() {
@@ -440,23 +465,18 @@ class OrderingSystem {
     }
 
     async handleOrderSubmission() {
-        console.log('handleOrderSubmission called');
-        
         if (!this.currentItem) {
-            console.error('No current item for ordering');
             this.showNotification('No item selected for ordering', 'error');
             return;
         }
 
         const form = document.getElementById('orderForm');
         if (!form) {
-            console.error('Order form not found');
             this.showNotification('Order form not found', 'error');
             return;
         }
         
         if (!form.checkValidity()) {
-            console.log('Form validation failed');
             this.showNotification('Please fill all required fields', 'warning');
             form.reportValidity();
             return;
@@ -464,6 +484,15 @@ class OrderingSystem {
 
         const formData = new FormData(form);
         const quantity = parseInt(formData.get('quantity')) || 1;
+        
+        // Use unified price calculation
+        let priceBreakdown;
+        if (this.priceCalculator) {
+            priceBreakdown = this.priceCalculator.calculateOrderTotal(this.currentItem.price, quantity);
+        } else {
+            priceBreakdown = this.calculatePriceBreakdown(this.currentItem.price, quantity);
+        }
+        
         const orderData = {
             itemId: this.currentItem._id,
             itemName: this.currentItem.name,
@@ -473,19 +502,16 @@ class OrderingSystem {
             customerName: formData.get('customerName'),
             customerPhone: formData.get('customerPhone') || '',
             customerEmail: formData.get('customerEmail') || '',
-            vegType: formData.get('vegType'),
-            customerAddress: formData.get('address'),
-            deliveryDate: formData.get('deliveryDate'),
-            deliveryTime: formData.get('deliveryTime'),
-            paymentMethod: 'cash',
+            customerAddress: formData.get('deliveryAddress') || '',
+            deliveryDate: formData.get('deliveryDate') || '',
+            deliveryTime: formData.get('deliveryTime') || '',
+            paymentMethod: formData.get('paymentMethod') || 'cash',
             specialInstructions: formData.get('specialInstructions') || '',
-            subtotal: this.currentItem.price * quantity,
-            gstAmount: (this.currentItem.price * quantity * this.gstRate),
-            deliveryCharge: this.deliveryCharge,
-            totalPrice: this.calculateTotal(this.currentItem.price, quantity)
+            subtotal: priceBreakdown.subtotal,
+            gstAmount: priceBreakdown.gstAmount,
+            deliveryCharge: priceBreakdown.deliveryCharge,
+            totalPrice: priceBreakdown.total
         };
-
-        console.log('Submitting order:', orderData);
 
         try {
             const response = await fetch(`${this.apiBaseUrl}/orders`, {
@@ -496,25 +522,37 @@ class OrderingSystem {
                 body: JSON.stringify(orderData)
             });
 
-            console.log('Order response status:', response.status);
-
             if (response.ok) {
                 const order = await response.json();
-                console.log('Order placed successfully:', order);
                 this.saveOrderToLocalStorage(order);
                 this.showNotification('Order placed successfully!', 'success');
                 this.closeOrderModal();
                 this.addToCart(order);
                 this.updateCartDisplay();
             } else {
-                const errorData = await response.json();
-                console.error('Order failed:', errorData);
-                this.showNotification(errorData.error || 'Failed to place order', 'error');
+                const errorData = await response.json().catch(() => ({ error: 'Failed to place order' }));
+                const errorMessage = window.ErrorHandler ? 
+                    window.ErrorHandler.handleError(new Error(errorData.error || 'Failed to place order'), 'Order Submission') :
+                    (errorData.error || 'Failed to place order');
+                this.showNotification(errorMessage, 'error');
             }
         } catch (error) {
-            console.error('Error placing order:', error);
-            this.showNotification('Network error. Please try again.', 'error');
+            const errorMessage = window.ErrorHandler ? 
+                window.ErrorHandler.handleError(error, 'Order Submission') :
+                'Network error. Please try again.';
+            this.showNotification(errorMessage, 'error');
         }
+    }
+    
+    calculatePriceBreakdown(itemPrice, quantity) {
+        const subtotal = itemPrice * quantity;
+        const gstAmount = subtotal * this.gstRate;
+        return {
+            subtotal: parseFloat(subtotal.toFixed(2)),
+            gstAmount: parseFloat(gstAmount.toFixed(2)),
+            deliveryCharge: this.deliveryCharge,
+            total: parseFloat((subtotal + gstAmount + this.deliveryCharge).toFixed(2))
+        };
     }
 
     saveOrderToLocalStorage(order) {
@@ -582,23 +620,64 @@ class OrderingSystem {
         localStorage.setItem('grilliCart', JSON.stringify(this.cart));
     }
 
-    initializeSocket() {
-        // Initialize Socket.IO connection to unified server
-        if (typeof io !== 'undefined') {
-            this.socket = io('http://localhost:5000');
+    async initializeSocket() {
+        // Use SocketManager for proper error handling
+        if (window.SocketManager) {
+            const socketManager = new window.SocketManager();
+            const connected = await socketManager.connect('http://localhost:5000');
             
-            this.socket.on('connect', () => {
-                console.log('Connected to unified server for ordering');
-            });
+            if (connected) {
+                this.socket = socketManager.socket;
+                
+                // Listen for order updates
+                socketManager.on('order-updated', (data) => {
+                    this.handleOrderUpdate(data);
+                });
+                
+                socketManager.on('order-status-updated', (data) => {
+                    this.handleOrderUpdate(data);
+                });
+            } else {
+                // Fallback mode - continue without Socket.IO
+                this.socket = null;
+            }
+        } else if (typeof io !== 'undefined') {
+            // Fallback to direct Socket.IO if SocketManager not available
+            try {
+                this.socket = io('http://localhost:5000', {
+                    reconnection: true,
+                    reconnectionDelay: 1000,
+                    reconnectionAttempts: 5,
+                    timeout: 5000
+                });
+                
+                this.socket.on('connect', () => {
+                    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                        console.log('Connected to unified server for ordering');
+                    }
+                });
 
-            this.socket.on('disconnect', () => {
-                console.log('Disconnected from unified server');
-            });
+                this.socket.on('disconnect', () => {
+                    // Silent disconnect - no error shown to user
+                });
 
-            // Listen for order updates
-            this.socket.on('order-updated', (data) => {
-                this.handleOrderUpdate(data);
-            });
+                this.socket.on('connect_error', (error) => {
+                    // Silent connection error - continue in fallback mode
+                    this.socket = null;
+                });
+
+                // Listen for order updates
+                this.socket.on('order-updated', (data) => {
+                    this.handleOrderUpdate(data);
+                });
+                
+                this.socket.on('order-status-updated', (data) => {
+                    this.handleOrderUpdate(data);
+                });
+            } catch (error) {
+                // Silent error - continue without Socket.IO
+                this.socket = null;
+            }
         }
     }
 

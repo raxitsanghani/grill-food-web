@@ -239,9 +239,9 @@
     document.getElementById('adminLoginForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      const key = document.getElementById('key').value;
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value.trim();
+      const key = document.getElementById('key').value.trim();
       
       const loginBtn = document.getElementById('loginBtn');
       const loading = document.getElementById('loading');
@@ -253,16 +253,31 @@
       errorMessage.style.display = 'none';
       
       try {
-        // Fixed credentials check
-        if (email === 'raxitsanghani@gmail.com' && password === 'raxit2112' && key === '123456') {
+        // Use server API for authentication
+        const response = await fetch('/api/admin/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            email: email,
+            password: password,
+            securityKey: key
+          })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
           // Store admin session
           sessionStorage.setItem('adminAuthenticated', 'true');
           sessionStorage.setItem('adminEmail', email);
+          sessionStorage.setItem('adminToken', data.token);
           
           // Redirect to admin panel
           window.location.href = '/admin';
         } else {
-          throw new Error('Invalid credentials. Please check your email, password, and key.');
+          throw new Error(data.error || 'Invalid credentials. Please check your email, password, and key.');
         }
       } catch (error) {
         errorMessage.textContent = error.message;

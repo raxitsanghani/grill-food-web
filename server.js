@@ -323,9 +323,159 @@ app.get('/test-topbar-update', (req, res) => {
   res.sendFile(path.join(__dirname, 'test-topbar-update.html'));
 });
 
+// Messaging API Routes
+
+// Get messages by customer ID
+app.get('/api/messages', async (req, res) => {
+    try {
+        const { customerId } = req.query;
+        if (!customerId) {
+            return res.status(400).json({ error: 'Customer ID is required' });
+        }
+        const messages = db.getMessagesByCustomerId(customerId);
+        res.json(messages);
+    } catch (error) {
+        console.error('Error fetching messages:', error);
+        res.status(500).json({ error: 'Failed to fetch messages' });
+    }
+});
+
+// Create new message
+app.post('/api/messages', async (req, res) => {
+    try {
+        const messageData = req.body;
+        
+        if (!messageData.customerId || !messageData.content) {
+            return res.status(400).json({ error: 'Customer ID and content are required' });
+        }
+        
+        const message = db.createMessage(messageData);
+        
+        // Emit to all connected clients
+        io.emit('newMessage', message);
+        
+        // If message is from customer, notify admin
+        if (message.sender === 'customer') {
+            io.emit('newCustomerMessage', message);
+        }
+        
+        res.status(201).json(message);
+    } catch (error) {
+        console.error('Error creating message:', error);
+        res.status(500).json({ error: 'Failed to create message' });
+    }
+});
+
+// Get conversations list (for admin)
+app.get('/api/messages/conversations', async (req, res) => {
+    try {
+        const conversations = db.getConversations();
+        res.json(conversations);
+    } catch (error) {
+        console.error('Error fetching conversations:', error);
+        res.status(500).json({ error: 'Failed to fetch conversations' });
+    }
+});
+
+// Mark messages as read
+app.post('/api/messages/read', async (req, res) => {
+    try {
+        const { customerId } = req.body;
+        if (!customerId) {
+            return res.status(400).json({ error: 'Customer ID is required' });
+        }
+        db.markMessagesAsRead(customerId);
+        
+        // Emit read status update
+        io.emit('messagesRead', { customerId });
+        
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error marking messages as read:', error);
+        res.status(500).json({ error: 'Failed to mark messages as read' });
+    }
+});
+
 // Socket.IO connection handling
 io.on('connection', (socket) => {
     console.log('🔌 User client connected:', socket.id);
+    
+    // Join chat room
+    socket.on('joinChat', (data) => {
+        const { customerId, orderId } = data;
+        if (customerId) {
+            socket.join(`customer_${customerId}`);
+            console.log(`📱 Customer ${customerId} joined chat room`);
+        }
+        if (orderId) {
+            socket.join(`order_${orderId}`);
+        }
+    });
+
+    // Join admin room
+    socket.on('joinAdminRoom', () => {
+        socket.join('admin_room');
+        console.log('👤 Admin joined admin room');
+    });
+
+    // Send message from customer
+    socket.on('sendMessage', async (data) => {
+        try {
+            const message = db.createMessage({
+                ...data,
+                sender: 'customer'
+            });
+            
+            // Emit to customer's room
+            io.to(`customer_${data.customerId}`).emit('message', message);
+            
+            // Emit to admin room
+            io.to('admin_room').emit('newMessage', message);
+            
+            console.log(`💬 Message from customer ${data.customerId}`);
+        } catch (error) {
+            console.error('Error handling sendMessage:', error);
+        }
+    });
+
+    // Send message from admin
+    socket.on('sendAdminMessage', async (data) => {
+        try {
+            const message = db.createMessage({
+                ...data,
+                sender: 'admin'
+            });
+            
+            // Emit to customer's room
+            io.to(`customer_${data.customerId}`).emit('message', message);
+            
+            // Emit to admin room
+            io.to('admin_room').emit('newMessage', message);
+            
+            console.log(`💬 Message from admin to customer ${data.customerId}`);
+        } catch (error) {
+            console.error('Error handling sendAdminMessage:', error);
+        }
+    });
+
+    // Typing indicator
+    socket.on('typing', (data) => {
+        const { customerId } = data;
+        socket.to('admin_room').emit('typing', data);
+        socket.to(`customer_${customerId}`).emit('typing', data);
+    });
+
+    socket.on('typingStop', (data) => {
+        const { customerId } = data;
+        socket.to('admin_room').emit('typingStop', data);
+        socket.to(`customer_${customerId}`).emit('typingStop', data);
+    });
+
+    // Message read status
+    socket.on('messageRead', (data) => {
+        const { messageId, customerId } = data;
+        socket.to(`customer_${customerId}`).emit('messageRead', { messageId });
+    });
     
     socket.on('disconnect', () => {
         console.log('🔌 User client disconnected:', socket.id);

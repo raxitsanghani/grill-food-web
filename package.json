@@ -4,8 +4,8 @@
   "description": "Grilli Restaurant Website with Authentication",
   "main": "unified-server.js",
   "scripts": {
-    "start": "node unified-server.js",
-    "dev": "nodemon unified-server.js",
+    "start": "cross-env PORT=5000 node unified-server.js",
+    "dev": "cross-env PORT=5000 nodemon --quiet unified-server.js",
     "admin": "node admin-server.js",
     "dev:admin": "nodemon admin-server.js",
     "start:all": "node start-servers.js",
@@ -15,6 +15,7 @@
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
+    "cross-env": "^7.0.3",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "jsonwebtoken": "^9.0.2",
@@ -24,8 +25,8 @@
     "twilio": "^4.19.0"
   },
   "devDependencies": {
-    "nodemon": "^3.0.1",
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "nodemon": "^3.0.1"
   },
   "keywords": [
     "restaurant",

@@ -441,8 +441,6 @@ class MenuItemManager {
             customerName: document.getElementById('customerName').value,
             customerPhone: document.getElementById('customerPhone').value,
             customerEmail: document.getElementById('customerEmail').value,
-            deliveryDate: document.getElementById('deliveryDate').value,
-            deliveryTime: document.getElementById('deliveryTime').value,
             paymentMethod: document.querySelector('input[name="paymentMethod"]:checked').value,
             specialInstructions: document.getElementById('specialInstructions').value,
             orderDate: new Date().toISOString()
@@ -466,21 +464,59 @@ class MenuItemManager {
 
             const savedOrder = await response.json();
             
-            // Also save to localStorage for local reference
-            const orders = JSON.parse(localStorage.getItem('grilliOrders') || '[]');
-            orders.push(orderData);
-            localStorage.setItem('grilliOrders', JSON.stringify(orders));
+            // Also save to localStorage for local reference in the correct format
+            this.saveOrderToLocalStorage(savedOrder);
             
             return savedOrder;
         } catch (error) {
             console.error('Error saving order to MongoDB:', error);
             // Fallback to localStorage
-            const orders = JSON.parse(localStorage.getItem('grilliOrders') || '[]');
-            orders.push(orderData);
-            localStorage.setItem('grilliOrders', JSON.stringify(orders));
+            this.saveOrderToLocalStorage(orderData);
             
             // Re-throw error to show user
             throw error;
+        }
+    }
+
+    saveOrderToLocalStorage(order) {
+        try {
+            // Get existing orders from localStorage
+            const existingOrders = JSON.parse(localStorage.getItem('grilliOrders') || '[]');
+            
+            // Create a user-friendly order object that matches the orders page format
+            const userOrder = {
+                id: order._id || order.id || 'ORD' + Date.now(),
+                item: {
+                    name: order.itemName,
+                    price: order.unitPrice,
+                    image: order.itemImage || './assets/images/menu-1.png'
+                },
+                quantity: order.quantity,
+                totalAmount: order.totalPrice,
+                customerName: order.customerName,
+                customerPhone: order.customerPhone,
+                customerEmail: order.customerEmail,
+                customerAddress: order.customerAddress || 'Not specified',
+                customerCity: order.customerCity || 'Not specified',
+                customerPincode: order.customerPincode || 'Not specified',
+                deliveryDate: order.deliveryDate,
+                deliveryTime: order.deliveryTime,
+                paymentMethod: order.paymentMethod,
+                specialInstructions: order.specialInstructions,
+                orderTime: new Date().toISOString(),
+                status: 'pending',
+                estimatedDelivery: order.deliveryDate + ' at ' + order.deliveryTime
+            };
+            
+            // Add new order to the beginning
+            existingOrders.unshift(userOrder);
+            
+            // Save back to localStorage
+            localStorage.setItem('grilliOrders', JSON.stringify(existingOrders));
+            
+            console.log('Order saved to localStorage:', userOrder);
+        } catch (error) {
+            console.error('Error saving order to localStorage:', error);
         }
     }
 

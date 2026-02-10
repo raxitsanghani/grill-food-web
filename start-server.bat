@@ -1,0 +1,6 @@
+@echo off
+echo Stopping existing Node processes...
+taskkill /f /im node.exe >nul 2>&1
+timeout /t 3 /nobreak >nul
+echo Starting server on port 5000...
+npm run dev

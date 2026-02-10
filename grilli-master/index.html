@@ -35,6 +35,13 @@
     - ordering modal css
   -->
   <link rel="stylesheet" href="./assets/css/ordering-modal.css">
+  
+  <!-- 
+    - chat system and UI improvements css
+  -->
+  <link rel="stylesheet" href="./assets/css/chat-system.css">
+  <link rel="stylesheet" href="./assets/css/ui-improvements.css">
+  <link rel="stylesheet" href="./assets/css/accessibility.css">
 
   <!-- 
     - preload images
@@ -52,7 +59,7 @@
   -->
 
   <div class="preload" data-preaload>
-    <div class="circle"></div>
+      <div class="circle"></div>
     <p class="text">Grilli</p>
   </div>
 
@@ -65,7 +72,7 @@
   <!-- 
     - #MAIN CONTENT
   -->
-  <div class="main-content">
+  <div class="main-content" id="main-content">
 
   <!-- 
     - #TOP BAR
@@ -213,7 +220,7 @@
           <li class="navbar-item">
             <a href="./session-test.html" class="navbar-link hover-underline">
               <div class="separator"></div>
-
+          
               <span class="span">Session Test</span>
             </a>
           </li>
@@ -227,7 +234,7 @@
           </li>
 
           <li class="navbar-item">
-            <a href="#" class="navbar-link hover-underline">
+            <a href="#reservation" class="navbar-link hover-underline">
               <div class="separator"></div>
 
               <span class="span">Contact</span>
@@ -1067,23 +1074,23 @@
         <ul class="footer-list">
 
           <li>
-            <a href="#" class="label-2 footer-link hover-underline">Facebook</a>
+            <a href="https://www.facebook.com" target="_blank" rel="noopener noreferrer" class="label-2 footer-link hover-underline">Facebook</a>
           </li>
 
           <li>
-            <a href="#" class="label-2 footer-link hover-underline">Instagram</a>
+            <a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer" class="label-2 footer-link hover-underline">Instagram</a>
           </li>
 
           <li>
-            <a href="#" class="label-2 footer-link hover-underline">Twitter</a>
+            <a href="https://www.twitter.com" target="_blank" rel="noopener noreferrer" class="label-2 footer-link hover-underline">Twitter</a>
           </li>
 
           <li>
-            <a href="#" class="label-2 footer-link hover-underline">Youtube</a>
+            <a href="https://www.youtube.com" target="_blank" rel="noopener noreferrer" class="label-2 footer-link hover-underline">Youtube</a>
           </li>
 
           <li>
-            <a href="#" class="label-2 footer-link hover-underline">Google Map</a>
+            <a href="https://www.google.com/maps" target="_blank" rel="noopener noreferrer" class="label-2 footer-link hover-underline">Google Map</a>
           </li>
 
         </ul>
@@ -1222,6 +1229,14 @@
     - custom js link
   -->
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <!-- Utility functions - must load first -->
+  <script src="./assets/js/utils.js"></script>
+  <!-- Form validation - load before forms -->
+  <script src="./assets/js/form-validation.js"></script>
+  <!-- Shopping cart - load before ordering system -->
+  <script src="./assets/js/shopping-cart.js"></script>
+  <!-- Search functionality -->
+  <script src="./assets/js/search.js"></script>
   <script src="./assets/js/script.js"></script>
 
   <!-- 
@@ -1249,6 +1264,23 @@
     - menu display system js
   -->
   <script src="./assets/js/menu-display.js"></script>
+  
+  <!-- 
+    - UI enhancements and chat system
+  -->
+  <script src="./assets/js/ui-enhancements.js"></script>
+  <script src="./assets/js/chat-system.js"></script>
+  
+  <!-- 
+    - Accessibility and error handling
+  -->
+  <script src="./assets/js/accessibility.js"></script>
+  <script src="./assets/js/empty-states.js"></script>
+  <script src="./assets/js/error-handler.js"></script>
+  <script src="./assets/js/progress-indicator.js"></script>
+  <script src="./assets/js/order-tracking.js"></script>
+  <script src="./assets/js/skeleton-loader.js"></script>
+  <script src="./assets/js/payment-gateway.js"></script>
 
 </body>
 

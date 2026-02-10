@@ -12,13 +12,27 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700&family=Forum&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./assets/css/style.css">
   <link rel="stylesheet" href="./assets/css/orders.css">
+  <link rel="stylesheet" href="./assets/css/accessibility.css">
 </head>
 
 <body id="top">
 
   <div class="preload" data-preaload>
-    <div class="circle"></div>
-    <p class="text">Grilli</p>
+    <div class="loading-content">
+      <div class="loading-logo">
+        <img src="./assets/images/logo.svg" width="160" height="50" alt="Grilli">
+      </div>
+      <p class="text">Grilli</p>
+      <div class="circle"></div>
+      <div class="loading-dots">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+      <div class="loading-progress">
+        <div class="progress-bar"></div>
+      </div>
+    </div>
   </div>
 
   <header class="header" data-header>
@@ -66,6 +80,12 @@
               <span class="span">My Orders</span>
             </a>
           </li>
+          <li class="navbar-item">
+            <a href="./table-booking.html" class="navbar-link hover-underline">
+              <div class="separator"></div>
+              <span class="span">Book Table</span>
+            </a>
+          </li>
         </ul>
       </nav>
 
@@ -88,7 +108,7 @@
             <p class="section-text">Track your orders and view order history</p>
           </div>
 
-          <div class="orders-container">
+          <div class="orders-container" id="orders-container">
             <div id="noOrders" class="no-orders" style="display: none;">
               <div class="no-orders-icon">📋</div>
               <h3>No Orders Yet</h3>
@@ -113,6 +133,10 @@
   <script src="./assets/js/script.js"></script>
   <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
   <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+  <script src="./assets/js/accessibility.js"></script>
+  <script src="./assets/js/empty-states.js"></script>
+  <script src="./assets/js/error-handler.js"></script>
+  <script src="./assets/js/order-tracking.js"></script>
   <script src="./assets/js/orders.js"></script>
 </body>
 

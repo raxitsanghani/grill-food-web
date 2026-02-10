@@ -1,3 +1,6 @@
+// Load environment variables first
+require('dotenv').config();
+
 const express = require('express');
 const path = require('path');
 const cors = require('cors');
@@ -6,7 +9,44 @@ const jwt = require('jsonwebtoken');
 const http = require('http');
 const socketIo = require('socket.io');
 const LocalDatabase = require('./local-db');
-require('dotenv').config();
+
+let db;
+
+// Initialize database
+async function initializeDatabase() {
+  if (process.env.MONGODB_URI || process.env.MONGO_URL) {
+    try {
+      const MongoDatabase = require('./services/mongo-db');
+      db = new MongoDatabase();
+      
+      // Wait a moment for connection to establish
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      return true;
+    } catch (e) {
+      console.warn('⚠️  MongoDB init failed (unified), falling back to Local JSON DB:', e.message);
+      db = new LocalDatabase();
+      return false;
+    }
+  } else {
+    db = new LocalDatabase();
+    return false;
+  }
+}
+
+// Initialize database synchronously for now
+if (process.env.MONGODB_URI || process.env.MONGO_URL) {
+  try {
+    const MongoDatabase = require('./services/mongo-db');
+    db = new MongoDatabase();
+  } catch (e) {
+    console.warn('⚠️  MongoDB init failed (unified), falling back to Local JSON DB:', e.message);
+    db = new LocalDatabase();
+  }
+} else {
+  db = new LocalDatabase();
+  console.log('ℹ️  Using Local JSON Database (unified)');
+}
 
 const app = express();
 const server = http.createServer(app);
@@ -20,8 +60,7 @@ const io = socketIo(server, {
 const PORT = process.env.PORT || 5000;
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
-// Initialize local database
-const db = new LocalDatabase();
+// Database initialized above (MongoDB or Local JSON)
 
 // Middleware
 app.use(cors());
@@ -40,8 +79,8 @@ const authenticateAdmin = async (req, res, next) => {
         }
 
         const decoded = jwt.verify(token, JWT_SECRET);
-        const admins = db.getAllAdmins();
-        const admin = admins.find(a => a._id === decoded.adminId);
+        const admins = await db.getAllAdmins();
+        const admin = admins.find(a => a._id === decoded.adminId || a._id.toString() === decoded.adminId);
         
         if (!admin) {
             return res.status(401).json({ error: 'Invalid token.' });
@@ -61,12 +100,30 @@ app.get('/user', (req, res) => {
     res.sendFile(path.join(projectDir, 'index.html'));
 });
 
+// Payment pages
+app.get('/card-payment', (req, res) => {
+    res.sendFile(path.join(projectDir, 'card-payment.html'));
+});
+
+app.get('/upi-payment', (req, res) => {
+    res.sendFile(path.join(projectDir, 'upi-payment.html'));
+});
+
 // Selection page (root route)
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'selection.html'));
 });
 
 // Admin web routes
+// Serve admin login page
+app.get('/admin-login', (req, res) => {
+    res.sendFile(path.join(__dirname, 'admin-login.html'));
+});
+
+app.get('/admin-login.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'admin-login.html'));
+});
+
 // Serve index for both /admin and /admin/ without redirect loops
 app.get('/admin', (req, res) => {
     res.sendFile(path.join(__dirname, 'admin-panel', 'index.html'));
@@ -74,6 +131,11 @@ app.get('/admin', (req, res) => {
 
 app.get('/admin/', (req, res) => {
     res.sendFile(path.join(__dirname, 'admin-panel', 'index.html'));
+});
+
+// Create Admin page
+app.get('/admin/create-admin', (req, res) => {
+    res.sendFile(path.join(__dirname, 'admin-panel', 'create-admin.html'));
 });
 
 // Dashboard should serve for both with and without trailing slash
@@ -100,7 +162,7 @@ app.get('/api/health', (req, res) => {
 // Get all menu items
 app.get('/api/menu-items', async (req, res) => {
     try {
-        const menuItems = db.getAllMenuItems();
+        const menuItems = await db.getAllMenuItems();
         console.log('Serving menu items:', menuItems.length);
         res.json(menuItems);
     } catch (error) {
@@ -112,7 +174,7 @@ app.get('/api/menu-items', async (req, res) => {
 // Get single menu item by ID (used by ordering modal)
 app.get('/api/menu-items/by-id/:id', async (req, res) => {
     try {
-        const item = db.getMenuItemById(req.params.id);
+        const item = await db.getMenuItemById(req.params.id);
         if (!item) {
             return res.status(404).json({ error: 'Menu item not found' });
         }
@@ -126,7 +188,7 @@ app.get('/api/menu-items/by-id/:id', async (req, res) => {
 // -------------------------
 // Public User Auth Endpoints
 // -------------------------
-app.post('/api/users/register', (req, res) => {
+app.post('/api/users/register', async (req, res) => {
     try {
         const { fullName, email, phone, password } = req.body || {};
 
@@ -134,12 +196,12 @@ app.post('/api/users/register', (req, res) => {
             return res.status(400).json({ error: 'All fields are required' });
         }
 
-        const existing = db.getUserByEmail(email);
+        const existing = await db.getUserByEmail(email);
         if (existing) {
             return res.status(400).json({ error: 'Email already registered' });
         }
 
-        const user = db.createUser({ fullName, email, phone, password });
+        const user = await db.createUser({ fullName, email, phone, password });
 
         return res.status(201).json({
             message: 'Account created successfully',
@@ -156,7 +218,7 @@ app.post('/api/users/register', (req, res) => {
     }
 });
 
-app.post('/api/users/login', (req, res) => {
+app.post('/api/users/login', async (req, res) => {
     try {
         const { email, password } = req.body || {};
 
@@ -164,7 +226,7 @@ app.post('/api/users/login', (req, res) => {
             return res.status(400).json({ error: 'Email and password are required' });
         }
 
-        const user = db.authenticateUser(email, password);
+        const user = await db.authenticateUser(email, password);
         if (!user) {
             return res.status(400).json({ error: 'Invalid credentials' });
         }
@@ -192,7 +254,7 @@ app.post('/api/users/login', (req, res) => {
 app.get('/api/menu-items/:category', async (req, res) => {
     try {
         const { category } = req.params;
-        const menuItems = db.getMenuItemsByCategory(category);
+        const menuItems = await db.getMenuItemsByCategory(category);
         res.json(menuItems);
     } catch (error) {
         console.error('Error fetching menu items by category:', error);
@@ -203,13 +265,61 @@ app.get('/api/menu-items/:category', async (req, res) => {
 // Submit order
 app.post('/api/orders', async (req, res) => {
     try {
-        const orderData = req.body;
-        console.log('Order received:', orderData);
+        const orderData = req.body || {};
+        // Normalize payload: if multiple items provided, compute summary fields
+        if (Array.isArray(orderData.items) && orderData.items.length > 0) {
+            const subtotal = orderData.subtotal != null
+                ? Number(orderData.subtotal)
+                : orderData.items.reduce((sum, it) => sum + (Number(it.price || 0) * Number(it.quantity || 0)), 0);
+            const gstAmount = orderData.gstAmount != null ? Number(orderData.gstAmount) : Number(orderData.gst) || 0;
+            const delivery = orderData.deliveryCharge != null ? Number(orderData.deliveryCharge) : Number(orderData.deliveryFees) || 0;
+            const discount = orderData.discountAmount != null ? Number(orderData.discountAmount) : 0;
+            const finalTotal = orderData.finalTotal != null ? Number(orderData.finalTotal) : (orderData.totalPrice != null ? Number(orderData.totalPrice) : (subtotal + gstAmount + delivery - discount));
+            const totalQty = orderData.items.reduce((s, it) => s + Number(it.quantity || 0), 0);
+            const names = orderData.items.map(i => i.name).filter(Boolean);
+            orderData.itemName = names.length > 3 ? `${names.slice(0,3).join(', ')}…` : names.join(', ');
+            orderData.itemImage = orderData.items[0]?.image || orderData.itemImage;
+            orderData.unitPrice = subtotal; // for backward compatibility in some UIs
+            orderData.quantity = totalQty;
+            orderData.subtotal = subtotal;
+            orderData.gstAmount = gstAmount;
+            orderData.deliveryCharge = delivery;
+            orderData.discountAmount = discount;
+            orderData.totalPrice = finalTotal;
+        }
+
+        // Assign a random available rider if none is assigned yet
+        if (!orderData.assignedRider) {
+            const rider = await (db.assignRandomRider ? db.assignRandomRider() : null);
+            if (rider) {
+                orderData.assignedRider = {
+                    _id: rider._id,
+                    full_name: rider.full_name,
+                    phone: rider.phone,
+                    profile_photo: rider.profile_photo,
+                    age: rider.age || (20 + Math.floor(Math.random() * 15)),
+                    rating: rider.rating || (3.5 + Math.random() * 1.5)
+                };
+                // Simple ETA defaults
+                orderData.eta_minutes = undefined;
+                orderData.eta_seconds = 900; // 15 minutes
+                orderData.eta_set_at = new Date();
+            }
+        }
+
+        const order = await db.createOrder(orderData);
         
-        const order = db.createOrder(orderData);
-        
-        // Emit to admin clients
+        // Emit to admin clients and user room by phone if available
         io.emit('new-order', order);
+        if (order.customerPhone) {
+            io.to(String(order.customerPhone)).emit('rider:assigned', {
+                orderId: order._id,
+                rider: order.assignedRider,
+                eta_minutes: order.eta_minutes,
+                eta_seconds: order.eta_seconds,
+                eta_set_at: order.eta_set_at
+            });
+        }
         
         res.status(201).json(order);
     } catch (error) {
@@ -218,11 +328,22 @@ app.post('/api/orders', async (req, res) => {
     }
 });
 
+// Get all orders (for user panel)
+app.get('/api/orders', async (req, res) => {
+    try {
+        const orders = await db.getAllOrders();
+        res.json(orders);
+    } catch (error) {
+        console.error('Error fetching orders:', error);
+        res.status(500).json({ error: 'Failed to fetch orders' });
+    }
+});
+
 // Get order status
 app.get('/api/orders/:orderId/status', async (req, res) => {
     try {
         const { orderId } = req.params;
-        const order = db.getOrderById(orderId);
+        const order = await db.getOrderById(orderId);
         
         if (!order) {
             return res.status(404).json({ error: 'Order not found' });
@@ -302,7 +423,7 @@ app.post('/api/admin/setup', async (req, res) => {
         }
 
         // Check if email already exists
-        const existingAdmin = db.getAdminByEmail(email);
+        const existingAdmin = await db.getAdminByEmail(email);
         if (existingAdmin) {
             return res.status(400).json({ error: 'Email already registered. Please use a different email or login with existing account.' });
         }
@@ -312,7 +433,7 @@ app.post('/api/admin/setup', async (req, res) => {
         const hashedPassword = await bcryptjs.hash(password, salt);
 
         // Create admin
-        const admin = db.createAdmin({
+        const admin = await db.createAdmin({
             fullName,
             email,
             phone,
@@ -349,7 +470,7 @@ app.post('/api/admin/login', async (req, res) => {
         }
 
         // Find admin by email
-        const admin = db.getAdminByEmail(email);
+        const admin = await db.getAdminByEmail(email);
         if (!admin) {
             return res.status(400).json({ error: 'Invalid credentials' });
         }
@@ -421,7 +542,7 @@ app.get('/api/admin/check-auth', authenticateAdmin, (req, res) => {
 // Menu Items API
 app.get('/api/admin/menu-items', authenticateAdmin, async (req, res) => {
     try {
-        const menuItems = db.getAllMenuItems();
+        const menuItems = await db.getAllMenuItems();
         res.json(menuItems);
     } catch (error) {
         res.status(500).json({ error: 'Server error' });
@@ -469,7 +590,7 @@ app.post('/api/admin/menu-items', authenticateAdmin, async (req, res) => {
             imageLength: menuItemData.image ? menuItemData.image.length : 0
         });
         
-        const menuItem = db.createMenuItem(menuItemData);
+        const menuItem = await db.createMenuItem(menuItemData);
         
         // Emit to admin clients
         io.emit('menu-updated', { action: 'item-added', item: menuItem });
@@ -533,7 +654,7 @@ app.put('/api/admin/menu-items/:id', authenticateAdmin, async (req, res) => {
         
         console.log('Updating menu item with data:', updateData);
         
-        const menuItem = db.updateMenuItem(req.params.id, updateData);
+        const menuItem = await db.updateMenuItem(req.params.id, updateData);
         
         if (!menuItem) {
             console.log('Menu item not found:', req.params.id);
@@ -570,7 +691,7 @@ app.put('/api/admin/menu-items/:id', authenticateAdmin, async (req, res) => {
 
 app.delete('/api/admin/menu-items/:id', authenticateAdmin, async (req, res) => {
     try {
-        const success = db.deleteMenuItem(req.params.id);
+        const success = await db.deleteMenuItem(req.params.id);
         if (!success) {
             return res.status(404).json({ error: 'Menu item not found' });
         }
@@ -603,7 +724,7 @@ app.delete('/api/admin/menu-items/:id', authenticateAdmin, async (req, res) => {
 // Orders API
 app.get('/api/admin/orders', authenticateAdmin, async (req, res) => {
     try {
-        const orders = db.getAllOrders();
+        const orders = await db.getAllOrders();
         res.json(orders);
     } catch (error) {
         res.status(500).json({ error: 'Server error' });
@@ -619,7 +740,7 @@ app.put('/api/admin/orders/:id/status', authenticateAdmin, async (req, res) => {
             return res.status(400).json({ error: 'Invalid status' });
         }
 
-        const order = db.updateOrderStatus(req.params.id, status, adminNotes);
+        const order = await db.updateOrderStatus(req.params.id, status, adminNotes);
 
         if (!order) {
             return res.status(404).json({ error: 'Order not found' });
@@ -659,13 +780,228 @@ app.put('/api/admin/orders/:id/status', authenticateAdmin, async (req, res) => {
     }
 });
 
+app.delete('/api/admin/orders/:id', authenticateAdmin, async (req, res) => {
+    try {
+        const success = await db.deleteOrder(req.params.id);
+        if (success) {
+            // Emit real-time update to all connected clients
+            io.emit('order-deleted', {
+                orderId: req.params.id
+            });
+            
+            return res.json({ message: 'Order deleted successfully' });
+        }
+        return res.status(404).json({ error: 'Order not found' });
+    } catch (error) {
+        console.error('Error deleting order:', error);
+        res.status(500).json({ error: 'Failed to delete order' });
+    }
+});
+
 // Dashboard stats
 app.get('/api/admin/dashboard-stats', authenticateAdmin, async (req, res) => {
     try {
-        const stats = db.getDashboardStats();
+        const stats = await db.getDashboardStats();
         res.json(stats);
     } catch (error) {
         res.status(500).json({ error: 'Server error' });
+    }
+});
+
+// -------------------------
+// Riders API (for Admin UI)
+// -------------------------
+// -------------------------
+// Chefs API (for Admin UI)
+// -------------------------
+app.get('/api/chefs', async (req, res) => {
+    try {
+        const chefs = await db.getAllChefs();
+        res.json(chefs);
+    } catch (error) {
+        console.error('Error fetching chefs:', error);
+        res.status(500).json({ error: 'Failed to fetch chefs' });
+    }
+});
+
+app.get('/api/chefs/active', async (req, res) => {
+    try {
+        const chefs = await db.getActiveChefs();
+        res.json(chefs);
+    } catch (error) {
+        console.error('Error fetching active chefs:', error);
+        res.status(500).json({ error: 'Failed to fetch active chefs' });
+    }
+});
+
+app.get('/api/chefs/:id', async (req, res) => {
+    try {
+        const chef = await db.getChefById(req.params.id);
+        if (chef) return res.json(chef);
+        return res.status(404).json({ error: 'Chef not found' });
+    } catch (error) {
+        console.error('Error fetching chef:', error);
+        res.status(500).json({ error: 'Failed to fetch chef' });
+    }
+});
+
+app.post('/api/chefs', async (req, res) => {
+    try {
+        let { fullName, profilePhoto, experience, specialties, bio, rating, status } = req.body || {};
+
+        fullName = typeof fullName === 'string' ? fullName.trim() : '';
+        experience = typeof experience === 'string' ? experience.trim() : experience;
+        bio = typeof bio === 'string' ? bio.trim() : bio;
+        status = typeof status === 'string' ? status.trim() : status;
+
+        if (!fullName || !experience) {
+            return res.status(400).json({ error: 'Full name and experience are required' });
+        }
+
+        if (typeof specialties === 'string') {
+            specialties = specialties.split(',').map(s => s.trim()).filter(Boolean);
+        }
+        if (!Array.isArray(specialties)) specialties = [];
+
+        const parsedRating = Number(rating);
+        rating = Number.isFinite(parsedRating) ? Math.min(5, Math.max(1, parsedRating)) : 4.5;
+
+        const chef = await db.createChef({
+            fullName,
+            profilePhoto,
+            experience,
+            specialties,
+            bio: bio || '',
+            rating,
+            status: status || 'active'
+        });
+
+        if (chef) return res.status(201).json(chef);
+        return res.status(500).json({ error: 'Failed to create chef' });
+    } catch (error) {
+        console.error('Error creating chef:', error);
+        return res.status(500).json({ error: 'Failed to create chef' });
+    }
+});
+
+app.put('/api/chefs/:id', async (req, res) => {
+    try {
+        let { fullName, profilePhoto, experience, specialties, bio, rating, status } = req.body || {};
+
+        const updates = {};
+        if (typeof fullName === 'string' && fullName.trim()) updates.fullName = fullName.trim();
+        if (profilePhoto) updates.profilePhoto = profilePhoto;
+        if (typeof experience === 'string' && experience.trim()) updates.experience = experience.trim();
+
+        if (specialties !== undefined) {
+            if (typeof specialties === 'string') {
+                specialties = specialties.split(',').map(s => s.trim()).filter(Boolean);
+            }
+            updates.specialties = Array.isArray(specialties) ? specialties : [];
+        }
+
+        if (bio !== undefined) updates.bio = typeof bio === 'string' ? bio.trim() : bio;
+
+        if (rating !== undefined) {
+            const parsedRating = Number(rating);
+            if (Number.isFinite(parsedRating)) {
+                updates.rating = Math.min(5, Math.max(1, parsedRating));
+            }
+        }
+
+        if (typeof status === 'string' && status.trim()) updates.status = status.trim();
+
+        const chef = await db.updateChef(req.params.id, updates);
+        if (chef) return res.json(chef);
+        return res.status(404).json({ error: 'Chef not found' });
+    } catch (error) {
+        console.error('Error updating chef:', error);
+        return res.status(500).json({ error: 'Failed to update chef' });
+    }
+});
+
+app.delete('/api/chefs/:id', async (req, res) => {
+    try {
+        const success = await db.deleteChef(req.params.id);
+        if (success) return res.json({ message: 'Chef deleted successfully' });
+        return res.status(404).json({ error: 'Chef not found' });
+    } catch (error) {
+        console.error('Error deleting chef:', error);
+        return res.status(500).json({ error: 'Failed to delete chef' });
+    }
+});
+
+app.get('/api/riders', async (req, res) => {
+    try {
+        const riders = await db.getAllRiders();
+        res.json(riders);
+    } catch (error) {
+        console.error('Error fetching riders:', error);
+        res.status(500).json({ error: 'Failed to fetch riders' });
+    }
+});
+
+app.post('/api/riders', async (req, res) => {
+    try {
+        const { full_name, phone, profile_photo, lat, lng, status } = req.body || {};
+
+        if (!full_name || !phone) {
+            return res.status(400).json({ error: 'Full name and phone are required' });
+        }
+
+        // Indian phone validation
+        const phoneRegex = /^(\+91|0)?[6-9]\d{9}$/;
+        if (!phoneRegex.test(String(phone).replace(/[-\s]/g, ''))) {
+            return res.status(400).json({ error: 'Invalid Indian phone number' });
+        }
+
+        const rider = await db.addRider({ full_name, phone, profile_photo, lat, lng, status });
+        if (rider) {
+            return res.status(201).json(rider);
+        }
+        return res.status(500).json({ error: 'Failed to add rider' });
+    } catch (error) {
+        console.error('Error adding rider:', error);
+        res.status(500).json({ error: 'Failed to add rider' });
+    }
+});
+
+app.put('/api/riders/:id', async (req, res) => {
+    try {
+        const updates = req.body || {};
+        if (updates.phone) {
+            const phoneRegex = /^(\+91|0)?[6-9]\d{9}$/;
+            if (!phoneRegex.test(String(updates.phone).replace(/[-\s]/g, ''))) {
+                return res.status(400).json({ error: 'Invalid Indian phone number' });
+            }
+        }
+        const rider = await db.updateRider(req.params.id, updates);
+        if (rider) return res.json(rider);
+        return res.status(404).json({ error: 'Rider not found' });
+    } catch (error) {
+        console.error('Error updating rider:', error);
+        res.status(500).json({ error: 'Failed to update rider' });
+    }
+});
+
+app.delete('/api/riders/:id', async (req, res) => {
+    try {
+        const success = await db.deleteRider(req.params.id);
+        if (success) return res.json({ message: 'Rider deleted successfully' });
+        return res.status(404).json({ error: 'Rider not found' });
+    } catch (error) {
+        console.error('Error deleting rider:', error);
+        res.status(500).json({ error: 'Failed to delete rider' });
+    }
+});
+
+app.post('/api/riders/seed', async (req, res) => {
+    try {
+        const riders = db.seedSampleRiders();
+        res.json({ message: `${riders.length} sample riders created`, riders });
+    } catch (error) {
+        console.error('Error seeding riders:', error);
+        res.status(500).json({ error: 'Failed to seed riders' });
     }
 });
 
@@ -715,8 +1051,5 @@ app.use('/api/*', (req, res) => {
 
 // Start server
 server.listen(PORT, () => {
-    console.log(`🚀 Unified Server is running on http://localhost:${PORT}`);
-    console.log(`📱 User Web: http://localhost:${PORT}/user`);
-    console.log(`🔐 Admin Web: http://localhost:${PORT}/admin`);
-    console.log(`📊 Using Local JSON Database`);
+    console.log(`✅ Server running successfully on port ${PORT}`);
 });

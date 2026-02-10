@@ -6,6 +6,11 @@ class AdminDashboard {
         this.currentOrderId = null;
         this.orders = [];
         this.menuItems = [];
+        this.riders = [];
+        this.chefs = [];
+        this.tableBookings = [];
+        this.currentEditingRider = null;
+        this.currentEditingChef = null;
         
         this.initializeEventListeners();
         this.initializeSocket();
@@ -17,6 +22,37 @@ class AdminDashboard {
         document.getElementById('logoutBtn').addEventListener('click', () => {
             this.handleLogout();
         });
+
+        // Sidebar toggle
+        const hamburger = document.getElementById('hamburger');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        const toggleSidebar = (show) => {
+            const open = show != null ? show : !sidebar.classList.contains('open');
+            if (open) {
+                sidebar.classList.add('open');
+                overlay.classList.add('show');
+                sidebar.setAttribute('aria-hidden', 'false');
+            } else {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('show');
+                sidebar.setAttribute('aria-hidden', 'true');
+            }
+        };
+        if (hamburger) hamburger.addEventListener('click', () => toggleSidebar());
+        if (overlay) overlay.addEventListener('click', () => toggleSidebar(false));
+
+        // Sidebar nav actions
+        const wire = (id, fn) => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('click', () => { fn(); toggleSidebar(false); });
+        };
+        wire('navDesktop', () => showDashboard());
+        wire('navUpdateOrders', () => showUpdateOrders());
+        wire('navAddItems', () => showAddItems());
+        wire('navRiders', () => showRiders());
+        wire('navChefs', () => showChefs());
+        wire('navTableBooking', () => showTableBooking());
 
         // Menu item modal
         document.getElementById('addMenuItemBtn').addEventListener('click', () => {
@@ -74,14 +110,107 @@ class AdminDashboard {
                 this.testImageUpload();
             });
         }
+
+        // Rider modal
+        document.getElementById('addRiderBtn').addEventListener('click', () => {
+            this.openRiderModal();
+        });
+
+        document.getElementById('closeRiderModal').addEventListener('click', () => {
+            this.closeRiderModal();
+        });
+
+        document.getElementById('cancelRider').addEventListener('click', () => {
+            this.closeRiderModal();
+        });
+
+        document.getElementById('riderForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.handleRiderSubmit();
+        });
+
+        // Rider photo input
+        const riderPhotoInput = document.getElementById('riderPhoto');
+        if (riderPhotoInput) {
+            riderPhotoInput.addEventListener('change', async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                if (!file.type.startsWith('image/')) {
+                    this.showNotification('Please select a valid image', 'error');
+                    e.target.value = '';
+                    return;
+                }
+                if (file.size > 2 * 1024 * 1024) {
+                    this.showNotification('Image must be <= 2MB', 'error');
+                    e.target.value = '';
+                    return;
+                }
+                const preview = document.getElementById('riderPhotoPreview');
+                const reader = new FileReader();
+                reader.onload = () => {
+                    preview.innerHTML = `<img src="${reader.result}" alt="Preview" style="max-height: 140px; border-radius: 10px;">`;
+                    preview.classList.add('has-image');
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // Chef modal
+        document.getElementById('addChefBtn').addEventListener('click', () => {
+            this.openChefModal();
+        });
+
+        document.getElementById('closeChefModal').addEventListener('click', () => {
+            this.closeChefModal();
+        });
+
+        document.getElementById('cancelChef').addEventListener('click', () => {
+            this.closeChefModal();
+        });
+
+        document.getElementById('chefForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.handleChefSubmit();
+        });
+
+        // Table booking refresh button
+        document.getElementById('refreshBookingsBtn').addEventListener('click', () => {
+            this.refreshTableBookings();
+        });
+
+        // Chef photo input
+        const chefPhotoInput = document.getElementById('chefPhoto');
+        if (chefPhotoInput) {
+            chefPhotoInput.addEventListener('change', async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                if (!file.type.startsWith('image/')) {
+                    this.showNotification('Please select a valid image', 'error');
+                    e.target.value = '';
+                    return;
+                }
+                if (file.size > 2 * 1024 * 1024) {
+                    this.showNotification('Image must be <= 2MB', 'error');
+                    e.target.value = '';
+                    return;
+                }
+                const preview = document.getElementById('chefPhotoPreview');
+                const reader = new FileReader();
+                reader.onload = () => {
+                    preview.innerHTML = `<img src="${reader.result}" alt="Preview" style="max-height: 140px; border-radius: 10px;">`;
+                    preview.classList.add('has-image');
+                };
+                reader.readAsDataURL(file);
+            });
+        }
     }
 
     initializeSocket() {
-        // Connect to the unified server on port 5000
-        this.socket = io('http://localhost:5000');
+        // Connect to the admin server
+        this.socket = io();
         
         this.socket.on('connect', () => {
-            console.log('Connected to unified server on port 5000');
+            console.log('Connected to admin server');
         });
 
         this.socket.on('disconnect', () => {
@@ -98,6 +227,14 @@ class AdminDashboard {
 
         this.socket.on('new-order', (order) => {
             this.handleNewOrder(order);
+        });
+
+        this.socket.on('new-table-booking', (booking) => {
+            this.handleNewTableBooking(booking);
+        });
+
+        this.socket.on('table-booking-updated', (booking) => {
+            this.handleTableBookingUpdate(booking);
         });
     }
 
@@ -178,9 +315,7 @@ class AdminDashboard {
     }
 
     async refreshMenuItems() {
-        this.showNotification('Refreshing menu items...', 'info');
         await this.loadMenuItems();
-        this.showNotification('Menu items refreshed successfully!', 'success');
     }
 
     handleImageUpload(event) {
@@ -360,9 +495,39 @@ class AdminDashboard {
         this.orders.forEach(order => {
             const orderCard = document.createElement('div');
             orderCard.className = `order-card status-${order.status}`;
+            
+            // Build compact title: show up to 3 item names if items exist
+            let compactTitle = 'Food Order';
+            
+            if (order.items && Array.isArray(order.items) && order.items.length > 0) {
+                const names = order.items
+                    .map(i => (i && i.name ? String(i.name).trim() : ''))
+                    .filter(n => n.length > 0 && n !== 'undefined' && n.toLowerCase() !== 'undefined');
+                if (names.length > 0) {
+                    compactTitle = names.slice(0, 3).join(', ');
+                    if (names.length > 3) compactTitle += '…';
+                }
+            } 
+            else if (order.itemName && 
+                     typeof order.itemName === 'string' && 
+                     order.itemName.trim() !== '' && 
+                     order.itemName !== 'undefined' && 
+                     order.itemName.toLowerCase() !== 'undefined') {
+                compactTitle = order.itemName.trim();
+            }
+            
+            if (!compactTitle || 
+                compactTitle === 'undefined' || 
+                String(compactTitle).trim() === '' || 
+                String(compactTitle).toLowerCase() === 'undefined') {
+                compactTitle = 'Food Order';
+            }
+            
+            const paymentText = this.formatPaymentMethod(order.paymentMethod, order.paymentStatus, order.paymentDetails);
+            
             orderCard.innerHTML = `
                 <div class="order-header">
-                    <h3>${order.itemName}</h3>
+                    <h3>${compactTitle}</h3>
                     <span class="order-status ${order.status}">${this.formatStatus(order.status)}</span>
                 </div>
                 <div class="order-details">
@@ -370,8 +535,7 @@ class AdminDashboard {
                     <p><strong>Phone:</strong> ${order.customerPhone}</p>
                     <p><strong>Quantity:</strong> ${order.quantity}</p>
                     <p><strong>Total:</strong> ₹${order.totalPrice}</p>
-                    <p><strong>Delivery:</strong> ${order.deliveryDate} at ${order.deliveryTime}</p>
-                    <p><strong>Payment:</strong> ${order.paymentMethod}</p>
+                    <p><strong>Payment:</strong> ${paymentText}</p>
                     ${order.specialInstructions ? `<p><strong>Special Instructions:</strong> ${order.specialInstructions}</p>` : ''}
                     ${order.adminNotes ? `<p><strong>Admin Notes:</strong> ${order.adminNotes}</p>` : ''}
                 </div>
@@ -381,6 +545,51 @@ class AdminDashboard {
             `;
             container.appendChild(orderCard);
         });
+    }
+
+    formatPaymentMethod(method, status, details) {
+        const methodMap = {
+            'cash': 'Cash on Delivery',
+            'card': 'Credit/Debit Card',
+            'upi': 'UPI Payment'
+        };
+        
+        const methodText = methodMap[method] || method;
+        
+        if (status === 'paid' && details) {
+            if (method === 'card') {
+                return `${methodText} - Paid (****${details.cardNumber.slice(-4)})`;
+            } else if (method === 'upi') {
+                return `${methodText} - Paid (${details.upiId})`;
+            }
+            return `${methodText} - Paid`;
+        }
+        
+        return methodText;
+    }
+
+    formatOrderDate(dateValue) {
+        if (!dateValue) return 'Date not available';
+        
+        try {
+            const date = new Date(dateValue);
+            if (isNaN(date.getTime())) return 'Invalid Date';
+            
+            // Format: Date first, then time
+            const options = {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: true
+            };
+            
+            return date.toLocaleString('en-US', options);
+        } catch (error) {
+            return 'Date not available';
+        }
     }
 
     formatStatus(status) {
@@ -407,18 +616,55 @@ class AdminDashboard {
         orders.forEach(order => {
             const orderCard = document.createElement('div');
             orderCard.className = `order-card status-${order.status}`;
+
+            // Build compact title: show up to 3 item names if items exist
+            let compactTitle = 'Food Order';
+            
+            // First try to get names from items array
+            if (order.items && Array.isArray(order.items) && order.items.length > 0) {
+                const names = order.items
+                    .map(i => (i && i.name ? String(i.name).trim() : ''))
+                    .filter(n => n.length > 0 && n !== 'undefined' && n.toLowerCase() !== 'undefined');
+                if (names.length > 0) {
+                    compactTitle = names.slice(0, 3).join(', ');
+                    if (names.length > 3) compactTitle += '…';
+                }
+            } 
+            // Fallback to itemName if it exists and is valid
+            else if (order.itemName && 
+                     typeof order.itemName === 'string' && 
+                     order.itemName.trim() !== '' && 
+                     order.itemName !== 'undefined' && 
+                     order.itemName.toLowerCase() !== 'undefined') {
+                compactTitle = order.itemName.trim();
+            }
+            
+            // Final safety check
+            if (!compactTitle || 
+                compactTitle === 'undefined' || 
+                String(compactTitle).trim() === '' || 
+                String(compactTitle).toLowerCase() === 'undefined') {
+                compactTitle = 'Food Order';
+            }
+
+            const fullNames = (order.items && Array.isArray(order.items) && order.items.length > 0)
+                ? order.items.map(i => (i && i.name ? i.name : '')).filter(Boolean).join(', ')
+                : (order.itemName || '');
+            const safeTitleAttr = (!fullNames || String(fullNames).trim().toLowerCase() === 'undefined') ? '' : fullNames;
+
+            const paymentText = this.formatPaymentMethod(order.paymentMethod, order.paymentStatus, order.paymentDetails);
+
             orderCard.innerHTML = `
                 <div class="order-header">
-                    <h3>${order.itemName}</h3>
+                    <h3 title="${safeTitleAttr}">${compactTitle}</h3>
                     <span class="order-status ${order.status}">${this.formatStatus(order.status)}</span>
                 </div>
                 <div class="order-details">
                     <p><strong>Customer:</strong> ${order.customerName}</p>
                     <p><strong>Phone:</strong> ${order.customerPhone}</p>
                     <p><strong>Quantity:</strong> ${order.quantity}</p>
-                    <p><strong>Total:</strong> ₹${order.totalPrice}</p>
-                    <p><strong>Delivery:</strong> ${order.deliveryDate} at ${order.deliveryTime}</p>
-                    <p><strong>Payment:</strong> ${order.paymentMethod}</p>
+                    <p><strong>Total:</strong> ₹${order.totalPrice}</p>  
+                    <p><strong>Payment:</strong> ${paymentText}</p>
                     ${order.specialInstructions ? `<p><strong>Special Instructions:</strong> ${order.specialInstructions}</p>` : ''}
                     ${order.adminNotes ? `<p><strong>Admin Notes:</strong> ${order.adminNotes}</p>` : ''}
                 </div>
@@ -477,6 +723,7 @@ class AdminDashboard {
         }
 
         modal.classList.add('active');
+        document.body.classList.add('modal-open');
     }
 
     closeMenuItemModal() {
@@ -484,6 +731,7 @@ class AdminDashboard {
         this.currentEditingItem = null;
         this.resetImageUpload();
         console.log('Modal closed and reset');
+        document.body.classList.remove('modal-open');
     }
 
     async handleMenuItemSubmit() {
@@ -592,7 +840,7 @@ class AdminDashboard {
             });
 
             if (response.ok) {
-                const message = this.currentEditingItem ? 'Menu item updated successfully!' : 'Menu item added successfully!';
+                const message = this.currentEditingItem ? 'Item updated successfully' : 'Item added successfully';
                 this.showNotification(message, 'success');
                 this.closeMenuItemModal();
                 
@@ -605,7 +853,7 @@ class AdminDashboard {
                 if (contentType && contentType.includes('application/json')) {
                     try {
                         const data = await response.json();
-                        this.showNotification(data.error || 'Operation failed', 'error');
+                        this.showNotification(data.error || 'Operation failed. Please try again.', 'error');
                     } catch (jsonError) {
                         console.error('Error parsing JSON response:', jsonError);
                         this.showNotification('Server returned invalid response', 'error');
@@ -643,12 +891,12 @@ class AdminDashboard {
             });
 
             if (response.ok) {
-                this.showNotification('Menu item deleted successfully!', 'success');
+                this.showNotification('Item deleted successfully', 'success');
                 this.loadMenuItems();
                 this.loadDashboardStats();
             } else {
                 const data = await response.json();
-                this.showNotification(data.error || 'Deletion failed', 'error');
+                this.showNotification(data.error || 'Failed to delete item. Please try again.', 'error');
             }
         } catch (error) {
             console.error('Delete error:', error);
@@ -666,9 +914,36 @@ class AdminDashboard {
         
         if (order) {
             const detailsDiv = document.getElementById('orderDetails');
+            
+            // Calculate GST and Delivery Fees
+            const gst = order.gst || (order.unitPrice * 0.05) || 0; // 5% GST if not provided
+            const deliveryFees = order.deliveryFees || order.deliveryCharge || 46 || 0;
+            
+            // Display all items from the order
+            let itemsDisplay = '';
+            let itemsTitle = '';
+            
+            if (order.items && Array.isArray(order.items) && order.items.length > 0) {
+                // Multiple items order
+                const itemNames = order.items.map(item => item.name).join(', ');
+                itemsTitle = `<h3 style="color: var(--gold-crayola); margin-bottom: 1rem;">${itemNames}</h3>`;
+                itemsDisplay = '<div style="margin-bottom: 1rem; padding: 1rem; background: rgba(212, 175, 55, 0.1); border-radius: 10px; border: 1px solid rgba(212, 175, 55, 0.3);">';
+                itemsDisplay += '<p style="color: var(--gold-crayola); font-weight: 600; margin-bottom: 0.5rem;">Order Items:</p>';
+                itemsDisplay += '<ul style="margin-left: 20px; color: var(--white);">';
+                order.items.forEach(item => {
+                    const totalItemPrice = item.price * item.quantity;
+                    itemsDisplay += `<li style="margin-bottom: 0.3rem;">${item.name} <span style="color: var(--quick-silver);">x ${item.quantity}</span> = <span style="color: var(--gold-crayola);">₹${totalItemPrice}</span></li>`;
+                });
+                itemsDisplay += '</ul></div>';
+            } else if (order.itemName) {
+                // Single item order
+                itemsTitle = `<h3 style="color: var(--gold-crayola); margin-bottom: 1rem;">${order.itemName}</h3>`;
+            }
+            
             detailsDiv.innerHTML = `
                 <div class="order-info">
-                    <h3>${order.itemName}</h3>
+                    ${itemsTitle}
+                    ${itemsDisplay}
                     <div class="order-meta">
                         <p><strong>Order ID:</strong> ${order._id}</p>
                         <p><strong>Customer:</strong> ${order.customerName}</p>
@@ -676,26 +951,78 @@ class AdminDashboard {
                         <p><strong>Email:</strong> ${order.customerEmail || 'Not provided'}</p>
                         <p><strong>Quantity:</strong> ${order.quantity}</p>
                         <p><strong>Unit Price:</strong> ₹${order.unitPrice}</p>
+                        <p><strong>GST:</strong> ₹${gst.toFixed(2)}</p>
+                        <p><strong>Delivery Fees:</strong> ₹${deliveryFees}</p>
                         <p><strong>Total Price:</strong> ₹${order.totalPrice}</p>
-                        <p><strong>Delivery Date:</strong> ${order.deliveryDate}</p>
-                        <p><strong>Delivery Time:</strong> ${order.deliveryTime}</p>
                         <p><strong>Payment Method:</strong> ${order.paymentMethod}</p>
-                        <p><strong>Order Date:</strong> ${new Date(order.orderDate).toLocaleString()}</p>
+                        <p><strong>Order Date:</strong> ${this.formatOrderDate(order.createdAt || order.orderDate)}</p>
                         ${order.specialInstructions ? `<p><strong>Special Instructions:</strong> ${order.specialInstructions}</p>` : ''}
                     </div>
                 </div>
             `;
 
+            // Rider details + live map
+            const rider = order.assignedRider;
+            if (rider) {
+                const name = rider.full_name || rider.name || 'Delivery Partner';
+                const phone = rider.phone || '—';
+                const photo = rider.profile_photo || '../grilli-master/assets/images/testi-avatar.jpg';
+                const age = rider.age != null ? rider.age : '--';
+                const rating = rider.rating != null ? Number(rider.rating).toFixed(1) : '4.5';
+
+                const mapCoords = this.getRandomAhmedabadCoord();
+                const mapEmbed = this.buildGMapEmbed(mapCoords.lat, mapCoords.lng);
+
+                const riderBlock = document.createElement('div');
+                riderBlock.innerHTML = `
+                    <div style="margin-top: 12px; padding: 12px; border: 1px solid rgba(212,175,55,.25); border-radius: 12px;">
+                        <div style="display:flex;gap:12px;align-items:center;">
+                            <img src="${photo}" alt="Rider" style="width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid var(--gold-crayola)" onerror="this.src='../grilli-master/assets/images/testi-avatar.jpg'">
+                            <div>
+                                <h3 style="color: var(--gold-crayola); margin: 0 0 6px 0;">Delivery Partner</h3>
+                                <p style="margin:0;color:var(--quick-silver);">${name} • Age: ${age} • ⭐ ${rating}</p>
+                                <p style="margin:0;color:var(--quick-silver);">Contact: ${phone}</p>
+                            </div>
+                        </div>
+                        ${order.status === 'delivered' ? '' : `<div style="margin-top:10px;border-radius:12px;overflow:hidden;">${mapEmbed}</div>`}
+                    </div>
+                `;
+                detailsDiv.appendChild(riderBlock);
+            }
+
             document.getElementById('orderStatus').value = order.status;
             document.getElementById('adminNotes').value = order.adminNotes || '';
             
             document.getElementById('orderModal').classList.add('active');
+            document.body.classList.add('modal-open');
         }
+    }
+
+    getRandomAhmedabadCoord() {
+        const clusters = [
+            { lat: 23.0225, lng: 72.5714 },
+            { lat: 23.0300, lng: 72.5800 },
+            { lat: 23.0497, lng: 72.5660 },
+            { lat: 23.0336, lng: 72.5247 },
+            { lat: 23.0700, lng: 72.5300 },
+            { lat: 23.0580, lng: 72.6340 },
+            { lat: 23.0440, lng: 72.6200 }
+        ];
+        const base = clusters[Math.floor(Math.random()*clusters.length)];
+        const jitter = () => (Math.random() - 0.5) * 0.02;
+        return { lat: base.lat + jitter(), lng: base.lng + jitter() };
+    }
+
+    buildGMapEmbed(lat, lng) {
+        const q = encodeURIComponent(`${lat},${lng}`);
+        const url = `https://www.google.com/maps?q=${q}&z=15&output=embed`;
+        return `<iframe src="${url}" width="100%" height="220" style="border:0;" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>`;
     }
 
     closeOrderModal() {
         document.getElementById('orderModal').classList.remove('active');
         this.currentOrderId = null;
+        document.body.classList.remove('modal-open');
     }
 
     async updateOrderStatus() {
@@ -713,7 +1040,7 @@ class AdminDashboard {
             });
 
             if (response.ok) {
-                this.showNotification('Order status updated successfully!', 'success');
+                this.showNotification('Order updated successfully', 'success');
                 this.closeOrderModal();
                 
                 // Update the order in the local array
@@ -728,7 +1055,7 @@ class AdminDashboard {
                 this.loadDashboardStats();
             } else {
                 const data = await response.json();
-                this.showNotification(data.error || 'Status update failed', 'error');
+                this.showNotification(data.error || 'Failed to update order. Please try again.', 'error');
             }
         } catch (error) {
             console.error('Status update error:', error);
@@ -739,7 +1066,7 @@ class AdminDashboard {
     handleLogout() {
         this.adminToken = null;
         localStorage.removeItem('adminToken');
-        this.showNotification('Logged out successfully', 'info');
+        this.showNotification('Logged out successfully', 'success');
         // Redirect to selection page
         setTimeout(() => {
             window.location.href = '/';
@@ -759,8 +1086,8 @@ class AdminDashboard {
 
     handleMenuUpdate(data) {
         if (data.action === 'item-added') {
-            // Add new item to the beginning of the list
-            this.menuItems.unshift(data.item);
+            // Add new item to the list
+            this.menuItems.push(data.item);
         } else if (data.action === 'item-updated') {
             // Update existing item
             const index = this.menuItems.findIndex(item => item._id === data.item._id);
@@ -791,15 +1118,8 @@ class AdminDashboard {
     }
 
     handleNewOrder(order) {
-        // Add new order to the beginning of the list
-        this.orders.unshift(order);
-        
-        // Sort orders by creation date (newest first) to ensure proper order
-        this.orders.sort((a, b) => {
-            const dateA = new Date(a.orderDate || a.createdAt || 0);
-            const dateB = new Date(b.orderDate || b.createdAt || 0);
-            return dateB - dateA; // Newest first
-        });
+        // Add new order to the list
+        this.orders.push(order);
         
         // Refresh the display if on orders page
         if (document.getElementById('orderStatusPage').classList.contains('active')) {
@@ -809,7 +1129,7 @@ class AdminDashboard {
         this.loadDashboardStats();
         
         // Show notification
-        this.showNotification('New order received!', 'success');
+        this.showNotification('New order received', 'success');
     }
 
     fileToBase64(file) {
@@ -912,6 +1232,555 @@ class AdminDashboard {
         
         this.showNotification('Image upload test completed - check console', 'info');
     }
+
+    // ==================== RIDERS FUNCTIONALITY ====================
+
+    async refreshRiders() {
+        try {
+            const response = await fetch('/api/riders');
+            if (response.ok) {
+                this.riders = await response.json();
+                this.renderRiders();
+            } else {
+                this.showNotification('Failed to load riders', 'error');
+            }
+        } catch (error) {
+            console.error('Error refreshing riders:', error);
+            this.showNotification('Error loading riders', 'error');
+        }
+    }
+
+    async loadRiders() {
+        try {
+            const response = await fetch('/api/riders');
+            if (response.ok) {
+                this.riders = await response.json();
+                this.renderRiders();
+            }
+        } catch (error) {
+            console.error('Error loading riders:', error);
+        }
+    }
+
+    async seedRiders() {
+        try {
+            const response = await fetch('/api/riders/seed', { method: 'POST' });
+            const result = await response.json();
+            
+            if (response.ok) {
+                this.showNotification(result.message, 'success');
+                await this.refreshRiders();
+            } else {
+                this.showNotification(`Failed to seed riders: ${result.error}`, 'error');
+            }
+        } catch (error) {
+            console.error('Error seeding riders:', error);
+            this.showNotification('Error seeding riders', 'error');
+        }
+    }
+
+    renderRiders() {
+        const ridersGrid = document.getElementById('ridersGrid');
+        if (!ridersGrid) return;
+
+        if (this.riders.length === 0) {
+            ridersGrid.innerHTML = `
+                <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--quick-silver);">
+                    <h3>No riders found</h3>
+                    <p>Click "Add New Rider" to create a delivery rider</p>
+                </div>
+            `;
+            return;
+        }
+
+        ridersGrid.innerHTML = this.riders.map(rider => `
+            <div class="rider-card">
+                <div class="rider-header">
+                    <img src="${rider.profile_photo}" alt="${rider.full_name}" class="rider-photo">
+                    <div class="rider-info">
+                        <h4>${rider.full_name}</h4>
+                        <p>${rider.phone}</p>
+                    </div>
+                </div>
+                
+                <div class="rider-details">
+                    <div class="rider-detail">
+                        <span>Location:</span>
+                        <span>${rider.lat.toFixed(4)}, ${rider.lng.toFixed(4)}</span>
+                    </div>
+                    <div class="rider-detail">
+                        <span>Status:</span>
+                        <span class="rider-status ${rider.status}">${rider.status}</span>
+                    </div>
+                </div>
+                
+                <div class="rider-actions">
+                    <button class="edit-rider-btn" onclick="adminDashboard.editRider('${rider._id}')">
+                        ✏️ Edit
+                    </button>
+                    <button class="delete-rider-btn" onclick="adminDashboard.deleteRider('${rider._id}')">
+                        🗑️ Delete
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    openRiderModal(riderId = null) {
+        const modal = document.getElementById('riderModal');
+        const title = document.getElementById('riderModalTitle');
+        const form = document.getElementById('riderForm');
+        
+        if (riderId) {
+            // Edit mode
+            const rider = this.riders.find(r => r._id === riderId);
+            if (rider) {
+                this.currentEditingRider = rider;
+                title.textContent = 'Edit Rider';
+                
+                // Populate form
+                document.getElementById('riderName').value = rider.full_name;
+                document.getElementById('riderPhone').value = rider.phone;
+                document.getElementById('riderLat').value = rider.lat;
+                document.getElementById('riderLng').value = rider.lng;
+                document.getElementById('riderStatus').value = rider.status;
+            }
+        } else {
+            // Add mode
+            this.currentEditingRider = null;
+            title.textContent = 'Add New Rider';
+            form.reset();
+        }
+        
+        modal.style.display = 'flex';
+    }
+
+    closeRiderModal() {
+        const modal = document.getElementById('riderModal');
+        modal.style.display = 'none';
+        this.currentEditingRider = null;
+    }
+
+    async handleRiderSubmit() {
+        const formEl = document.getElementById('riderForm');
+        const formData = new FormData(formEl);
+        const riderData = {
+            full_name: formData.get('full_name'),
+            phone: formData.get('phone'),
+            lat: parseFloat(formData.get('lat')) || 23.0225,
+            lng: parseFloat(formData.get('lng')) || 72.5714,
+            status: formData.get('status')
+        };
+
+        // Attach base64 photo if provided
+        const photoInput = document.getElementById('riderPhoto');
+        if (photoInput && photoInput.files && photoInput.files[0]) {
+            const photoFile = photoInput.files[0];
+            riderData.profile_photo = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(photoFile);
+            });
+        }
+
+        try {
+            let response;
+            if (this.currentEditingRider) {
+                // Update existing rider
+                response = await fetch(`/api/riders/${this.currentEditingRider._id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(riderData)
+                });
+            } else {
+                // Add new rider
+                response = await fetch('/api/riders', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(riderData)
+                });
+            }
+
+            const result = await response.json();
+            
+            if (response.ok) {
+                this.showNotification(result.message || 'Rider saved successfully', 'success');
+                this.closeRiderModal();
+                await this.refreshRiders();
+            } else {
+                this.showNotification(`Failed to save rider: ${result.error || 'Unknown error'}`, 'error');
+            }
+        } catch (error) {
+            console.error('Error saving rider:', error);
+            this.showNotification('Error saving rider', 'error');
+        }
+    }
+
+    editRider(riderId) {
+        this.openRiderModal(riderId);
+    }
+
+    async deleteRider(riderId) {
+        if (!confirm('Are you sure you want to delete this rider?')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/riders/${riderId}`, { method: 'DELETE' });
+            const result = await response.json();
+            
+            if (response.ok) {
+                this.showNotification('Rider deleted successfully', 'success');
+                await this.refreshRiders();
+            } else {
+                this.showNotification(`Failed to delete rider: ${result.error}`, 'error');
+            }
+        } catch (error) {
+            console.error('Error deleting rider:', error);
+            this.showNotification('Error deleting rider', 'error');
+        }
+    }
+
+    // Chef Management Methods
+    async refreshChefs() {
+        try {
+            const response = await fetch('/api/chefs');
+            if (response.ok) {
+                this.chefs = await response.json();
+                this.renderChefs();
+            } else {
+                this.showNotification('Failed to load chefs', 'error');
+            }
+        } catch (error) {
+            console.error('Error refreshing chefs:', error);
+            this.showNotification('Error loading chefs', 'error');
+        }
+    }
+
+    async loadChefs() {
+        try {
+            const response = await fetch('/api/chefs');
+            if (response.ok) {
+                this.chefs = await response.json();
+                this.renderChefs();
+            }
+        } catch (error) {
+            console.error('Error loading chefs:', error);
+        }
+    }
+
+    renderChefs() {
+        const chefsGrid = document.getElementById('chefsGrid');
+        if (!chefsGrid) return;
+
+        if (this.chefs.length === 0) {
+            chefsGrid.innerHTML = `
+                <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--quick-silver);">
+                    <h3>No chefs found</h3>
+                    <p>Click "Add New Chef" to create a chef profile</p>
+                </div>
+            `;
+            return;
+        }
+
+        chefsGrid.innerHTML = this.chefs.map(chef => `
+            <div class="chef-card">
+                <div class="chef-header">
+                    <img src="${chef.profilePhoto}" alt="${chef.fullName}" class="chef-photo">
+                    <div class="chef-info">
+                        <h4>${chef.fullName}</h4>
+                        <p>${chef.experience}</p>
+                        <div class="chef-rating">
+                            ${'★'.repeat(Math.floor(chef.rating))}${'☆'.repeat(5 - Math.floor(chef.rating))} ${chef.rating}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="chef-details">
+                    <div class="chef-specialties">
+                        <strong>Specialties:</strong>
+                        <div class="specialty-tags">
+                            ${chef.specialties.map(specialty => `<span class="specialty-tag">${specialty}</span>`).join('')}
+                        </div>
+                    </div>
+                    ${chef.bio ? `<div class="chef-bio"><strong>Bio:</strong> ${chef.bio}</div>` : ''}
+                    <div class="chef-status">
+                        <span>Status:</span>
+                        <span class="status-badge ${chef.status}">${chef.status}</span>
+                    </div>
+                </div>
+                
+                <div class="chef-actions">
+                    <button class="edit-chef-btn" onclick="adminDashboard.editChef('${chef._id}')">
+                        ✏️ Edit
+                    </button>
+                    <button class="delete-chef-btn" onclick="adminDashboard.deleteChef('${chef._id}')">
+                        🗑️ Delete
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    openChefModal(chefId = null) {
+        this.currentEditingChef = chefId;
+        const modal = document.getElementById('chefModal');
+        const title = document.getElementById('chefModalTitle');
+        const form = document.getElementById('chefForm');
+        
+        if (chefId) {
+            const chef = this.chefs.find(c => c._id === chefId);
+            if (chef) {
+                title.textContent = 'Edit Chef';
+                document.getElementById('chefName').value = chef.fullName;
+                document.getElementById('chefExperience').value = chef.experience;
+                document.getElementById('chefSpecialties').value = chef.specialties.join(', ');
+                document.getElementById('chefBio').value = chef.bio || '';
+                document.getElementById('chefRating').value = chef.rating;
+                document.getElementById('chefStatus').value = chef.status;
+                
+                // Show existing photo
+                const preview = document.getElementById('chefPhotoPreview');
+                preview.innerHTML = `<img src="${chef.profilePhoto}" alt="Preview" style="max-height: 140px; border-radius: 10px;">`;
+                preview.classList.add('has-image');
+            }
+        } else {
+            title.textContent = 'Add New Chef';
+            form.reset();
+            const preview = document.getElementById('chefPhotoPreview');
+            preview.innerHTML = '<span class="upload-placeholder">No image selected</span>';
+            preview.classList.remove('has-image');
+        }
+        
+        modal.style.display = 'flex';
+    }
+
+    closeChefModal() {
+        document.getElementById('chefModal').style.display = 'none';
+        this.currentEditingChef = null;
+    }
+
+    async handleChefSubmit() {
+        const formData = new FormData(document.getElementById('chefForm'));
+        const chefData = {
+            fullName: formData.get('fullName'),
+            experience: formData.get('experience'),
+            specialties: formData.get('specialties').split(',').map(s => s.trim()).filter(s => s),
+            bio: formData.get('bio'),
+            rating: parseFloat(formData.get('rating')),
+            status: formData.get('status')
+        };
+
+        // Handle photo upload
+        const photoFile = document.getElementById('chefPhoto').files[0];
+        if (photoFile && photoFile.size > 0) {
+            const reader = new FileReader();
+            reader.onload = async () => {
+                chefData.profilePhoto = reader.result;
+                await this.saveChef(chefData);
+            };
+            reader.readAsDataURL(photoFile);
+        } else {
+            await this.saveChef(chefData);
+        }
+    }
+
+    async saveChef(chefData) {
+        try {
+            const url = this.currentEditingChef ? `/api/chefs/${this.currentEditingChef}` : '/api/chefs';
+            const method = this.currentEditingChef ? 'PUT' : 'POST';
+            
+            const response = await fetch(url, {
+                method,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(chefData)
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok) {
+                this.showNotification(
+                    this.currentEditingChef ? 'Chef details updated successfully' : 'Chef added successfully', 
+                    'success'
+                );
+                this.closeChefModal();
+                await this.refreshChefs();
+            } else {
+                this.showNotification(`Failed to save chef: ${result.error || 'Unknown error'}`, 'error');
+            }
+        } catch (error) {
+            console.error('Error saving chef:', error);
+            this.showNotification('Error saving chef', 'error');
+        }
+    }
+
+    editChef(chefId) {
+        this.openChefModal(chefId);
+    }
+
+    async deleteChef(chefId) {
+        if (!confirm('Are you sure you want to delete this chef?')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/chefs/${chefId}`, { method: 'DELETE' });
+            const result = await response.json();
+            
+            if (response.ok) {
+                this.showNotification('Chef deleted successfully', 'success');
+                await this.refreshChefs();
+            } else {
+                this.showNotification(`Failed to delete chef: ${result.error}`, 'error');
+            }
+        } catch (error) {
+            console.error('Error deleting chef:', error);
+            this.showNotification('Error deleting chef', 'error');
+        }
+    }
+
+    // Table Booking Methods
+    async loadTableBookings() {
+        try {
+            const response = await fetch('/api/table-bookings');
+            if (response.ok) {
+                this.tableBookings = await response.json();
+                this.renderTableBookings();
+            }
+        } catch (error) {
+            console.error('Error loading table bookings:', error);
+            this.showNotification('Error loading table bookings', 'error');
+        }
+    }
+
+    async refreshTableBookings() {
+        try {
+            await this.loadTableBookings();
+        } catch (error) {
+            console.error('Error refreshing table bookings:', error);
+            this.showNotification('Error loading table bookings', 'error');
+        }
+    }
+
+    renderTableBookings() {
+        const bookingsGrid = document.getElementById('bookingsGrid');
+        if (!bookingsGrid) return;
+
+        if (this.tableBookings.length === 0) {
+            bookingsGrid.innerHTML = `
+                <div class="no-bookings">
+                    <h3>No table bookings found</h3>
+                    <p>Table bookings from users will appear here</p>
+                </div>
+            `;
+            return;
+        }
+
+        bookingsGrid.innerHTML = this.tableBookings.map(booking => `
+            <div class="booking-card">
+                <div class="booking-header">
+                    <h3 class="booking-name">${booking.fullName}</h3>
+                    <span class="booking-status ${booking.status}">${booking.status}</span>
+                </div>
+                
+                <div class="booking-details">
+                    <div class="booking-detail">
+                        <span class="booking-detail-label">Table</span>
+                        <span class="booking-detail-value">${booking.tableNumber || 'Table ' + booking.tableId}</span>
+                    </div>
+                    
+                    <div class="booking-detail">
+                        <span class="booking-detail-label">Persons</span>
+                        <span class="booking-detail-value">${booking.persons} people</span>
+                    </div>
+                    
+                    <div class="booking-detail">
+                        <span class="booking-detail-label">Date</span>
+                        <span class="booking-detail-value">${new Date(booking.bookingDate).toLocaleDateString()}</span>
+                    </div>
+                    
+                    <div class="booking-detail">
+                        <span class="booking-detail-label">Time</span>
+                        <span class="booking-detail-value">${booking.bookingTime}</span>
+                    </div>
+                    
+                    <div class="booking-detail">
+                        <span class="booking-detail-label">Phone</span>
+                        <span class="booking-detail-value">${booking.phone}</span>
+                    </div>
+                    
+                    <div class="booking-detail">
+                        <span class="booking-detail-label">Payment</span>
+                        <div class="booking-payment">
+                            <span class="payment-icon">${booking.paymentMethod === 'card' ? '💳' : '📱'}</span>
+                            <span class="booking-detail-value">${booking.paymentMethod.toUpperCase()}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="booking-actions">
+                    <button class="booking-action-btn primary" onclick="window.adminDashboard.updateBookingStatus('${booking.id}', 'confirmed')">
+                        Confirm
+                    </button>
+                    <button class="booking-action-btn secondary" onclick="window.adminDashboard.updateBookingStatus('${booking.id}', 'pending')">
+                        Pending
+                    </button>
+                    <button class="booking-action-btn danger" onclick="window.adminDashboard.updateBookingStatus('${booking.id}', 'cancelled')">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    async updateBookingStatus(bookingId, newStatus) {
+        try {
+            const response = await fetch(`/api/table-bookings/${bookingId}/status`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.adminToken}`
+                },
+                body: JSON.stringify({ status: newStatus })
+            });
+
+            if (response.ok) {
+                this.showNotification('Booking status updated successfully', 'success');
+                await this.loadTableBookings();
+            } else {
+                const error = await response.json();
+                this.showNotification(error.message || 'Failed to update booking status', 'error');
+            }
+        } catch (error) {
+            console.error('Error updating booking status:', error);
+            this.showNotification('Error updating booking status', 'error');
+        }
+    }
+
+    // Socket event handlers for table bookings
+    handleNewTableBooking(booking) {
+        console.log('New table booking received:', booking);
+        this.showNotification('New table booking received', 'success');
+        
+        // Refresh the table bookings list
+        this.loadTableBookings();
+        
+        // Update dashboard stats if on dashboard
+        const dashboard = document.getElementById('dashboard');
+        if (dashboard && dashboard.classList.contains('active')) {
+            this.loadDashboardStats();
+        }
+    }
+
+    handleTableBookingUpdate(booking) {
+        console.log('Table booking updated:', booking);
+        
+        // Refresh the table bookings list
+        this.loadTableBookings();
+    }
 }
 
 // Global functions for onclick handlers
@@ -919,18 +1788,115 @@ function showAddItems() {
     document.getElementById('dashboard').classList.remove('active');
     document.getElementById('addItemsPage').classList.add('active');
     document.getElementById('orderStatusPage').classList.remove('active');
+    document.getElementById('ridersPage').classList.remove('active');
+    document.getElementById('chefsPage').classList.remove('active');
+    document.getElementById('tableBookingPage').classList.remove('active');
+    
+    // Hide dashboard header and stats
+    const dashboardHeader = document.querySelector('.dashboard-header');
+    const dashboardStats = document.querySelector('.dashboard-stats');
+    if (dashboardHeader) dashboardHeader.style.display = 'none';
+    if (dashboardStats) dashboardStats.style.display = 'none';
+    
+    // Load menu items when page is shown
+    if (window.adminDashboard) {
+        window.adminDashboard.loadMenuItems();
+    }
 }
 
 function showUpdateOrders() {
     document.getElementById('dashboard').classList.remove('active');
     document.getElementById('addItemsPage').classList.remove('active');
     document.getElementById('orderStatusPage').classList.add('active');
+    document.getElementById('ridersPage').classList.remove('active');
+    document.getElementById('chefsPage').classList.remove('active');
+    document.getElementById('tableBookingPage').classList.remove('active');
+    
+    // Hide dashboard header and stats
+    const dashboardHeader = document.querySelector('.dashboard-header');
+    const dashboardStats = document.querySelector('.dashboard-stats');
+    if (dashboardHeader) dashboardHeader.style.display = 'none';
+    if (dashboardStats) dashboardStats.style.display = 'none';
+    
+    // Load orders when page is shown
+    if (window.adminDashboard) {
+        window.adminDashboard.loadOrders();
+    }
+}
+
+function showRiders() {
+    document.getElementById('dashboard').classList.remove('active');
+    document.getElementById('addItemsPage').classList.remove('active');
+    document.getElementById('orderStatusPage').classList.remove('active');
+    document.getElementById('ridersPage').classList.add('active');
+    document.getElementById('chefsPage').classList.remove('active');
+    document.getElementById('tableBookingPage').classList.remove('active');
+    
+    // Hide dashboard header and stats
+    const dashboardHeader = document.querySelector('.dashboard-header');
+    const dashboardStats = document.querySelector('.dashboard-stats');
+    if (dashboardHeader) dashboardHeader.style.display = 'none';
+    if (dashboardStats) dashboardStats.style.display = 'none';
+    
+    // Load riders when page is shown
+    if (window.adminDashboard) {
+        window.adminDashboard.loadRiders();
+    }
+}
+
+function showChefs() {
+    document.getElementById('dashboard').classList.remove('active');
+    document.getElementById('addItemsPage').classList.remove('active');
+    document.getElementById('orderStatusPage').classList.remove('active');
+    document.getElementById('ridersPage').classList.remove('active');
+    document.getElementById('chefsPage').classList.add('active');
+    document.getElementById('tableBookingPage').classList.remove('active');
+    
+    // Hide dashboard header and stats
+    const dashboardHeader = document.querySelector('.dashboard-header');
+    const dashboardStats = document.querySelector('.dashboard-stats');
+    if (dashboardHeader) dashboardHeader.style.display = 'none';
+    if (dashboardStats) dashboardStats.style.display = 'none';
+    
+    // Load chefs when page is shown
+    if (window.adminDashboard) {
+        window.adminDashboard.loadChefs();
+    }
+}
+
+function showTableBooking() {
+    document.getElementById('dashboard').classList.remove('active');
+    document.getElementById('addItemsPage').classList.remove('active');
+    document.getElementById('orderStatusPage').classList.remove('active');
+    document.getElementById('ridersPage').classList.remove('active');
+    document.getElementById('chefsPage').classList.remove('active');
+    document.getElementById('tableBookingPage').classList.add('active');
+    
+    // Hide dashboard header and stats
+    const dashboardHeader = document.querySelector('.dashboard-header');
+    const dashboardStats = document.querySelector('.dashboard-stats');
+    if (dashboardHeader) dashboardHeader.style.display = 'none';
+    if (dashboardStats) dashboardStats.style.display = 'none';
+    
+    // Load table bookings when page is shown
+    if (window.adminDashboard) {
+        window.adminDashboard.loadTableBookings();
+    }
 }
 
 function showDashboard() {
     document.getElementById('dashboard').classList.add('active');
     document.getElementById('addItemsPage').classList.remove('active');
     document.getElementById('orderStatusPage').classList.remove('active');
+    document.getElementById('ridersPage').classList.remove('active');
+    document.getElementById('chefsPage').classList.remove('active');
+    document.getElementById('tableBookingPage').classList.remove('active');
+    
+    // Show dashboard header and stats
+    const dashboardHeader = document.querySelector('.dashboard-header');
+    const dashboardStats = document.querySelector('.dashboard-stats');
+    if (dashboardHeader) dashboardHeader.style.display = 'block';
+    if (dashboardStats) dashboardStats.style.display = 'grid';
 }
 
 // Initialize admin dashboard when DOM is loaded

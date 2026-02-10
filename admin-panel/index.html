@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grilli - Admin Panel</title>
+    <title>Grilli Admin Dashboard</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -65,14 +65,38 @@
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 </head>
 <body>
+    <!-- Floating Particles Background -->
+    <div class="floating-particles">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+
     <!-- Loading Screen -->
-    <div id="loadingScreen" class="loading-screen active">
+    <div id="loadingScreen" class="preload active">
         <div class="loading-content">
-            <div class="loading-logo">
-                <img src="../grilli-master/assets/images/logo.svg" width="160" height="50" alt="Grilli">
+            <p class="text">GRILLI</p>
+            <div class="circle"></div>
+            <div class="loading-dots">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
             </div>
-            <div class="loading-text">Grilli</div>
-            <div class="loading-spinner"></div>
+            <div class="loading-progress">
+                <div class="progress-bar"></div>
+            </div>
         </div>
     </div>
 
@@ -81,7 +105,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <div class="logo-section">
-                    <img src="../grilli-master/assets/images/logo.svg" width="160" height="50" alt="Grilli - Admin Panel">
+                    <img src="../grilli-master/assets/images/logo.svg" width="160" height="50" alt="Grilli">
                 </div>
                 <h2>Checking Authentication</h2>
                 <p>Please wait while we verify your access...</p>
@@ -96,9 +120,6 @@
     <div id="loginModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <div class="logo-section">
-                    <img src="../grilli-master/assets/images/logo.svg" width="160" height="50" alt="Grilli - Admin Panel">
-                </div>
                 <h2>Admin Login</h2>
                 <p>Restaurant Management System</p>
             </div>
@@ -119,16 +140,15 @@
                 
                 <div class="form-group">
                     <label for="loginSecurityKey">Security Key</label>
-                    <input type="text" id="loginSecurityKey" placeholder="Enter 6-digit security key" maxlength="6" pattern="[0-9]{6}" required>
+                    <div class="password-input">
+                        <input type="password" id="loginSecurityKey" placeholder="Enter 6-digit security key" maxlength="6" pattern="[0-9]{6}" required>
+                        <button type="button" class="eye-btn" onclick="togglePassword('loginSecurityKey')">👁️</button>
+                    </div>
                 </div>
                 
                 <button type="submit" class="primary-btn">Login</button>
                 
                 <div id="loginError" class="error-message"></div>
-                
-                <div class="form-footer">
-                    <p>Need access? Contact the system administrator.</p>
-                </div>
             </form>
         </div>
     </div>
@@ -138,11 +158,14 @@
         <!-- Header -->
         <header class="admin-header">
             <div class="header-content">
+                <div class="header-left">
+                    <div class="empty-area"></div>
+                </div>
                 <div class="logo-section">
-                    <img src="../grilli-master/assets/images/logo.svg" width="160" height="50" alt="Grilli - Admin Panel">
-                    <span class="admin-info" id="adminInfo"></span>
+                    <span class="admin-info" id="adminInfo">Welcome back, admin!</span>
                 </div>
                 <div class="header-actions">
+                    <button id="createAdminBtn" class="create-admin-btn">Create Admin</button>
                     <button id="logoutBtn" class="logout-btn">Logout</button>
                 </div>
             </div>
@@ -333,23 +356,5 @@
     <div id="notificationToast" class="notification-toast"></div>
 
     <script src="/admin/script.js"></script>
-    
-    <!-- Test Button for Debugging -->
-    <div style="position: fixed; top: 10px; right: 10px; z-index: 10000;">
-        <button onclick="testDashboard()" style="background: red; color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer;">
-            Test Dashboard
-        </button>
-    </div>
-    
-    <script>
-        function testDashboard() {
-            console.log('Testing dashboard manually...');
-            if (window.adminPanel) {
-                window.adminPanel.showDashboard();
-            } else {
-                console.log('Admin panel not initialized yet');
-            }
-        }
-    </script>
 </body>
 </html>

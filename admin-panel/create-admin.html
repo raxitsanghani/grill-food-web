@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Admin - Grilli</title>
+    <link rel="stylesheet" href="/admin/styles.css">
+    <style>
+        /* Extracted from inline styles to satisfy linter */
+        .hidden { display: none; }
+        .modal.modal-flex { display: flex; }
+        .ca-modal { padding: 1rem 1.5rem; max-width: 400px; max-height: 85vh; overflow-y: auto; }
+        .ca-modal-header { margin-bottom: 0.2rem; }
+        .ca-logo { text-align: center; margin-bottom: 0.3rem; }
+        .ca-title { font-size: 2.2rem; margin-bottom: 0.2rem; }
+        .ca-subtitle { font-size: 1rem; margin-bottom: 0; }
+        .ca-form { min-width: 320px; padding: 0 0.5rem; }
+        .ca-form-group { margin-bottom: 0.25rem; }
+        .ca-label { font-size: 1rem; margin-bottom: 0.1rem; display: block; }
+        .ca-input { padding: 0.7rem 0.8rem; font-size: 1rem; }
+        .ca-submit { margin-top: 0.2rem; padding: 0.8rem 1.5rem; font-size: 1rem; }
+        .toast { position: absolute; right: 20px; top: 20px; }
+        .toast-success { background: rgba(46, 204, 113, 0.15); border: 1px solid rgba(46, 204, 113, 0.6); color: #2ecc71; box-shadow: 0 10px 30px rgba(46,204,113,0.2); }
+        .toast-error { background: rgba(231, 76, 60, 0.15); border: 1px solid rgba(231, 76, 60, 0.6); color: #e74c3c; }
+    </style>
+</head>
+<body>
+    <div class="preload active hidden" id="pageLoader"></div>
+
+    <div class="modal active modal-flex">
+        <div class="modal-content ca-modal">
+            <div class="modal-header ca-modal-header">
+                <div class="logo-section ca-logo">
+                    <img src="../grilli-master/assets/images/logo.svg" width="140" height="44" alt="Grilli">
+                </div>
+                <h2 class="ca-title">Create Admin</h2>
+                <p class="ca-subtitle">Restaurant Management System</p>
+            </div>
+
+            <form id="createAdminForm" class="admin-form ca-form">
+                <div class="form-group ca-form-group">
+                    <label for="fullName" class="ca-label">User Name</label>
+                    <input type="text" id="fullName" name="fullName" required class="ca-input">
+                    <span class="error-message" id="nameError"></span>
+                </div>
+
+                <div class="form-group ca-form-group">
+                    <label for="email" class="ca-label">Email</label>
+                    <input type="email" id="email" name="email" required class="ca-input">
+                    <span class="error-message" id="emailError"></span>
+                </div>
+
+                <div class="form-group ca-form-group">
+                    <label for="password" class="ca-label">Password</label>
+                    <div class="password-input">
+                        <input type="password" id="password" name="password" required class="ca-input">
+                        <button type="button" class="password-toggle" onclick="togglePassword('password')">
+                            <span class="eye-icon">👁️</span>
+                        </button>
+                    </div>
+                    <span class="error-message" id="passwordError"></span>
+                </div>
+
+                <div class="form-group ca-form-group">
+                    <label for="securityKey" class="ca-label">Security Key (6 digits)</label>
+                    <input type="text" id="securityKey" name="securityKey" maxlength="6" required class="ca-input">
+                    <span class="error-message" id="securityKeyError"></span>
+                </div>
+
+                <button type="submit" class="primary-btn ca-submit">Create</button>
+            </form>
+
+            <div id="successToast" class="notification-toast toast toast-success hidden"></div>
+        </div>
+    </div>
+
+    <script>
+    function togglePassword(id){
+        const el=document.getElementById(id); el.type = el.type==='password'?'text':'password';
+    }
+
+    document.getElementById('createAdminForm').addEventListener('submit', async (e)=>{
+        e.preventDefault();
+        const fullName = document.getElementById('fullName').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        const securityKey = document.getElementById('securityKey').value.trim();
+
+        // simple validations
+        let ok = true;
+        document.getElementById('nameError').textContent='';
+        document.getElementById('emailError').textContent='';
+        document.getElementById('passwordError').textContent='';
+        document.getElementById('securityKeyError').textContent='';
+
+        if(fullName.length<3){ document.getElementById('nameError').textContent='Name must be at least 3 characters'; ok=false; }
+        if(!/^([^\s@]+)@gmail\.com$/.test(email)){ document.getElementById('emailError').textContent='Enter a valid Gmail address'; ok=false; }
+        if(password.length<6){ document.getElementById('passwordError').textContent='Password must be at least 6 characters'; ok=false; }
+        if(!/^\d{6}$/.test(securityKey)){ document.getElementById('securityKeyError').textContent='Enter a 6-digit key'; ok=false; }
+        if(!ok) return;
+
+        try{
+            const res = await fetch('/api/admin/setup', {
+                method:'POST',
+                headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({ fullName, email, phone:'N/A', password, securityKey })
+            });
+            const data = await res.json();
+            if(!res.ok){
+                document.getElementById('successToast').style.display='block';
+                document.getElementById('successToast').textContent = data.error || 'Failed to create account';
+                document.getElementById('successToast').style.background='rgba(231, 76, 60, 0.15)';
+                document.getElementById('successToast').style.borderColor='rgba(231, 76, 60, 0.6)';
+                document.getElementById('successToast').style.color='#e74c3c';
+                return;
+            }
+
+            // success toast
+            const toast = document.getElementById('successToast');
+            toast.textContent = 'Admin created successfully! Redirecting...';
+            toast.style.display='block';
+            toast.style.background='rgba(46, 204, 113, 0.15)';
+            toast.style.borderColor='rgba(46, 204, 113, 0.6)';
+            toast.style.color='#2ecc71';
+
+            // store token for dashboard auth
+            if (data.token) {
+                localStorage.setItem('adminToken', data.token);
+                sessionStorage.setItem('adminAuthenticated', 'true');
+                sessionStorage.setItem('adminEmail', data.admin?.email || email);
+            }
+
+            // Redirect directly to admin dashboard without authentication check
+            setTimeout(()=>{ window.location.href='/admin/dashboard'; }, 1200);
+        }catch(err){
+            const toast = document.getElementById('successToast');
+            toast.textContent = 'Network error. Please try again.';
+            toast.style.display='block';
+            toast.style.background='rgba(231, 76, 60, 0.15)';
+            toast.style.borderColor='rgba(231, 76, 60, 0.6)';
+            toast.style.color='#e74c3c';
+        }
+    });
+    </script>
+</body>
+</html>
+
+

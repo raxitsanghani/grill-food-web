@@ -7,7 +7,7 @@ class AdminPanel {
         this.currentOrderId = null;
         this.orders = [];
         this.menuItems = [];
-        
+
         this.initializeEventListeners();
         this.initializeSocket();
         this.showLoadingScreen();
@@ -24,6 +24,11 @@ class AdminPanel {
         // Logout button
         document.getElementById('logoutBtn').addEventListener('click', () => {
             this.handleLogout();
+        });
+
+        // Create Admin button
+        document.getElementById('createAdminBtn').addEventListener('click', () => {
+            window.location.href = '/admin/create-admin';
         });
 
         // Menu item modal
@@ -71,7 +76,7 @@ class AdminPanel {
     initializeSocket() {
         // Connect to the unified server on port 5000
         this.socket = io('http://localhost:5000');
-        
+
         this.socket.on('connect', () => {
             console.log('Connected to unified server on port 5000');
         });
@@ -97,7 +102,7 @@ class AdminPanel {
         try {
             // Check if user is authenticated via session storage
             const isAuthenticated = sessionStorage.getItem('adminAuthenticated') === 'true';
-            
+
             if (isAuthenticated) {
                 // User is authenticated, show dashboard
                 this.adminToken = 'authenticated'; // Set a dummy token for fixed admin
@@ -129,7 +134,7 @@ class AdminPanel {
             const dashboard = document.getElementById('dashboard');
             const addItemsPage = document.getElementById('addItemsPage');
             const orderStatusPage = document.getElementById('orderStatusPage');
-            
+
             console.log('Elements found:', {
                 authCheck: !!authCheck,
                 loginModal: !!loginModal,
@@ -138,11 +143,11 @@ class AdminPanel {
                 addItemsPage: !!addItemsPage,
                 orderStatusPage: !!orderStatusPage
             });
-            
+
             if (authCheck) authCheck.classList.remove('active');
             if (loginModal) loginModal.classList.remove('active');
             if (adminPanel) adminPanel.classList.remove('hidden');
-            
+
             if (dashboard) {
                 dashboard.classList.add('active');
                 // Force display block as a fallback
@@ -150,20 +155,20 @@ class AdminPanel {
             }
             if (addItemsPage) addItemsPage.classList.remove('active');
             if (orderStatusPage) orderStatusPage.classList.remove('active');
-            
+
             // Debug: Check final state
             console.log('Final dashboard state:', {
                 classes: dashboard ? dashboard.className : 'not found',
                 style: dashboard ? dashboard.style.display : 'not found',
                 hidden: adminPanel ? adminPanel.classList.contains('hidden') : 'not found'
             });
-            
+
             // Load admin info and dashboard data
             this.loadAdminInfo();
             this.loadDashboardStats();
             this.loadMenuItems();
             this.loadOrders();
-            
+
             console.log('Dashboard shown successfully');
         } catch (error) {
             console.error('Error showing dashboard:', error);
@@ -195,9 +200,9 @@ class AdminPanel {
 
     async handleLogin() {
         const formData = {
-            email: document.getElementById('loginEmail').value,
-            password: document.getElementById('loginPassword').value,
-            securityKey: document.getElementById('loginSecurityKey').value
+            email: document.getElementById('loginEmail').value.trim(),
+            password: document.getElementById('loginPassword').value.trim(),
+            securityKey: document.getElementById('loginSecurityKey').value.trim()
         };
 
         const errorDiv = document.getElementById('loginError');
@@ -218,10 +223,10 @@ class AdminPanel {
                 this.adminToken = data.token;
                 localStorage.setItem('adminToken', data.token);
                 this.showNotification('Login successful!', 'success');
-                
+
                 // Clear form
                 document.getElementById('loginForm').reset();
-                
+
                 console.log('Login successful, redirecting to dashboard...');
                 // Redirect to dashboard under /admin namespace so assets resolve correctly
                 setTimeout(() => {
@@ -278,7 +283,7 @@ class AdminPanel {
             if (response.ok) {
                 this.menuItems = await response.json();
                 this.renderMenuGrid();
-            } 
+            }
         } catch (error) {
             console.error('Error loading menu items:', error);
         }
@@ -336,9 +341,39 @@ class AdminPanel {
         this.orders.forEach(order => {
             const orderCard = document.createElement('div');
             orderCard.className = `order-card status-${order.status}`;
+
+            // Build compact title: show up to 3 item names if items exist
+            let compactTitle = 'Food Order';
+
+            if (order.items && Array.isArray(order.items) && order.items.length > 0) {
+                const names = order.items
+                    .map(i => (i && i.name ? String(i.name).trim() : ''))
+                    .filter(n => n.length > 0 && n !== 'undefined' && n.toLowerCase() !== 'undefined');
+                if (names.length > 0) {
+                    compactTitle = names.slice(0, 3).join(', ');
+                    if (names.length > 3) compactTitle += '…';
+                }
+            }
+            else if (order.itemName &&
+                typeof order.itemName === 'string' &&
+                order.itemName.trim() !== '' &&
+                order.itemName !== 'undefined' &&
+                order.itemName.toLowerCase() !== 'undefined') {
+                compactTitle = order.itemName.trim();
+            }
+
+            if (!compactTitle ||
+                compactTitle === 'undefined' ||
+                String(compactTitle).trim() === '' ||
+                String(compactTitle).toLowerCase() === 'undefined') {
+                compactTitle = 'Food Order';
+            }
+
+            const paymentText = this.formatPayment(order.paymentMethod, order.paymentDetails);
+
             orderCard.innerHTML = `
                 <div class="order-header">
-                    <h3>${order.itemName}</h3>
+                    <h3>${compactTitle}</h3>
                     <span class="order-status ${order.status}">${this.formatStatus(order.status)}</span>
                 </div>
                 <div class="order-details">
@@ -346,8 +381,7 @@ class AdminPanel {
                     <p><strong>Phone:</strong> ${order.customerPhone}</p>
                     <p><strong>Quantity:</strong> ${order.quantity}</p>
                     <p><strong>Total:</strong> ₹${order.totalPrice}</p>
-                    <p><strong>Delivery:</strong> ${order.deliveryDate} at ${order.deliveryTime}</p>
-                    <p><strong>Payment:</strong> ${order.paymentMethod}</p>
+                    <p><strong>Payment:</strong> ${paymentText}</p>
                     ${order.specialInstructions ? `<p><strong>Special Instructions:</strong> ${order.specialInstructions}</p>` : ''}
                     ${order.adminNotes ? `<p><strong>Admin Notes:</strong> ${order.adminNotes}</p>` : ''}
                 </div>
@@ -357,6 +391,27 @@ class AdminPanel {
             `;
             container.appendChild(orderCard);
         });
+    }
+
+    formatPaymentMethod(method, status, details) {
+        const methodMap = {
+            'cash': 'Cash on Delivery',
+            'card': 'Credit/Debit Card',
+            'upi': 'UPI Payment'
+        };
+
+        const methodText = methodMap[method] || method;
+
+        if (status === 'paid' && details) {
+            if (method === 'card') {
+                return `${methodText} - Paid (****${details.cardNumber.slice(-4)})`;
+            } else if (method === 'upi') {
+                return `${methodText} - Paid (${details.upiId})`;
+            }
+            return `${methodText} - Paid`;
+        }
+
+        return methodText;
     }
 
     formatStatus(status) {
@@ -383,9 +438,47 @@ class AdminPanel {
         orders.forEach(order => {
             const orderCard = document.createElement('div');
             orderCard.className = `order-card status-${order.status}`;
+
+            // Build compact title: show up to 3 item names if items exist
+            let compactTitle = 'Food Order';
+
+            // First try to get names from items array
+            if (order.items && Array.isArray(order.items) && order.items.length > 0) {
+                const names = order.items
+                    .map(i => (i && i.name ? String(i.name).trim() : ''))
+                    .filter(n => n.length > 0 && n !== 'undefined' && n.toLowerCase() !== 'undefined');
+                if (names.length > 0) {
+                    compactTitle = names.slice(0, 3).join(', ');
+                    if (names.length > 3) compactTitle += '…';
+                }
+            }
+            // Fallback to itemName if it exists and is valid
+            else if (order.itemName &&
+                typeof order.itemName === 'string' &&
+                order.itemName.trim() !== '' &&
+                order.itemName !== 'undefined' &&
+                order.itemName.toLowerCase() !== 'undefined') {
+                compactTitle = order.itemName.trim();
+            }
+
+            // Final safety check
+            if (!compactTitle ||
+                compactTitle === 'undefined' ||
+                String(compactTitle).trim() === '' ||
+                String(compactTitle).toLowerCase() === 'undefined') {
+                compactTitle = 'Food Order';
+            }
+
+            const fullNames = (order.items && Array.isArray(order.items) && order.items.length > 0)
+                ? order.items.map(i => (i && i.name ? i.name : '')).filter(n => n && n !== 'undefined').join(', ')
+                : (order.itemName && order.itemName !== 'undefined' ? order.itemName : '');
+            const safeTitleAttr = (!fullNames || String(fullNames).trim().toLowerCase() === 'undefined') ? '' : fullNames;
+
+            const paymentText = this.formatPayment(order.paymentMethod, order.paymentDetails);
+
             orderCard.innerHTML = `
                 <div class="order-header">
-                    <h3>${order.itemName}</h3>
+                    <h3 title="${safeTitleAttr}">${compactTitle}</h3>
                     <span class="order-status ${order.status}">${this.formatStatus(order.status)}</span>
                 </div>
                 <div class="order-details">
@@ -393,8 +486,7 @@ class AdminPanel {
                     <p><strong>Phone:</strong> ${order.customerPhone}</p>
                     <p><strong>Quantity:</strong> ${order.quantity}</p>
                     <p><strong>Total:</strong> ₹${order.totalPrice}</p>
-                    <p><strong>Delivery:</strong> ${order.deliveryDate} at ${order.deliveryTime}</p>
-                    <p><strong>Payment:</strong> ${order.paymentMethod}</p>
+                    <p><strong>Payment:</strong> ${paymentText}</p>
                     ${order.specialInstructions ? `<p><strong>Special Instructions:</strong> ${order.specialInstructions}</p>` : ''}
                     ${order.adminNotes ? `<p><strong>Admin Notes:</strong> ${order.adminNotes}</p>` : ''}
                 </div>
@@ -464,10 +556,10 @@ class AdminPanel {
         }
 
         try {
-            const url = this.currentEditingItem 
+            const url = this.currentEditingItem
                 ? `/api/admin/menu-items/${this.currentEditingItem}`
                 : '/api/admin/menu-items';
-            
+
             const method = this.currentEditingItem ? 'PUT' : 'POST';
 
             const response = await fetch(url, {
@@ -483,7 +575,7 @@ class AdminPanel {
                 const message = this.currentEditingItem ? 'Menu item updated successfully!' : 'Menu item added successfully!';
                 this.showNotification(message, 'success');
                 this.closeMenuItemModal();
-                
+
                 // Refresh the menu items
                 await this.loadMenuItems();
                 this.loadDashboardStats();
@@ -531,12 +623,39 @@ class AdminPanel {
     async viewOrderDetails(orderId) {
         this.currentOrderId = orderId;
         const order = this.orders.find(o => o._id === orderId);
-        
+
         if (order) {
             const detailsDiv = document.getElementById('orderDetails');
+
+            // Calculate GST and Delivery Fees
+            const gst = order.gst || (order.unitPrice * 0.05) || 0; // 5% GST if not provided
+            const deliveryFees = order.deliveryFees || order.deliveryCharge || 46 || 0;
+
+            // Display all items from the order
+            let itemsDisplay = '';
+            let itemsTitle = '';
+
+            if (order.items && Array.isArray(order.items) && order.items.length > 0) {
+                // Multiple items order
+                const itemNames = order.items.map(item => item.name).join(', ');
+                itemsTitle = `<h3 style="color: var(--gold-crayola); margin-bottom: 1rem;">${itemNames}</h3>`;
+                itemsDisplay = '<div style="margin-bottom: 1rem; padding: 1rem; background: rgba(212, 175, 55, 0.1); border-radius: 10px; border: 1px solid rgba(212, 175, 55, 0.3);">';
+                itemsDisplay += '<p style="color: var(--gold-crayola); font-weight: 600; margin-bottom: 0.5rem;">Order Items:</p>';
+                itemsDisplay += '<ul style="margin-left: 20px; color: var(--white);">';
+                order.items.forEach(item => {
+                    const totalItemPrice = item.price * item.quantity;
+                    itemsDisplay += `<li style="margin-bottom: 0.3rem;">${item.name} <span style="color: var(--quick-silver);">x ${item.quantity}</span> = <span style="color: var(--gold-crayola);">₹${totalItemPrice}</span></li>`;
+                });
+                itemsDisplay += '</ul></div>';
+            } else if (order.itemName) {
+                // Single item order
+                itemsTitle = `<h3 style="color: var(--gold-crayola); margin-bottom: 1rem;">${order.itemName}</h3>`;
+            }
+
             detailsDiv.innerHTML = `
                 <div class="order-info">
-                    <h3>${order.itemName}</h3>
+                    ${itemsTitle}
+                    ${itemsDisplay}
                     <div class="order-meta">
                         <p><strong>Order ID:</strong> ${order._id}</p>
                         <p><strong>Customer:</strong> ${order.customerName}</p>
@@ -544,9 +663,9 @@ class AdminPanel {
                         <p><strong>Email:</strong> ${order.customerEmail || 'Not provided'}</p>
                         <p><strong>Quantity:</strong> ${order.quantity}</p>
                         <p><strong>Unit Price:</strong> ₹${order.unitPrice}</p>
+                        <p><strong>GST:</strong> ₹${gst.toFixed(2)}</p>
+                        <p><strong>Delivery Fees:</strong> ₹${deliveryFees}</p>
                         <p><strong>Total Price:</strong> ₹${order.totalPrice}</p>
-                        <p><strong>Delivery Date:</strong> ${order.deliveryDate}</p>
-                        <p><strong>Delivery Time:</strong> ${order.deliveryTime}</p>
                         <p><strong>Payment Method:</strong> ${order.paymentMethod}</p>
                         <p><strong>Order Date:</strong> ${new Date(order.orderDate).toLocaleString()}</p>
                         ${order.specialInstructions ? `<p><strong>Special Instructions:</strong> ${order.specialInstructions}</p>` : ''}
@@ -556,7 +675,7 @@ class AdminPanel {
 
             document.getElementById('orderStatus').value = order.status;
             document.getElementById('adminNotes').value = order.adminNotes || '';
-            
+
             document.getElementById('orderModal').classList.add('active');
         }
     }
@@ -583,14 +702,14 @@ class AdminPanel {
             if (response.ok) {
                 this.showNotification('Order status updated successfully!', 'success');
                 this.closeOrderModal();
-                
+
                 // Update the order in the local array
                 const orderIndex = this.orders.findIndex(order => order._id === this.currentOrderId);
                 if (orderIndex !== -1) {
                     this.orders[orderIndex].status = status;
                     this.orders[orderIndex].adminNotes = adminNotes;
                 }
-                
+
                 // Refresh the display
                 this.renderOrders();
                 this.loadDashboardStats();
@@ -647,7 +766,7 @@ class AdminPanel {
             // Remove deleted item
             this.menuItems = this.menuItems.filter(item => item._id !== data.itemId);
         }
-        
+
         // Refresh the display
         this.renderMenuGrid();
         this.loadDashboardStats();
@@ -660,7 +779,7 @@ class AdminPanel {
             this.orders[orderIndex].status = data.status;
             this.orders[orderIndex].adminNotes = data.adminNotes;
         }
-        
+
         // Refresh the display
         this.renderOrders();
         this.loadDashboardStats();
@@ -669,14 +788,14 @@ class AdminPanel {
     handleNewOrder(order) {
         // Add new order to the beginning of the list
         this.orders.unshift(order);
-        
+
         // Refresh the display if on orders page
         if (document.getElementById('orderStatusPage').classList.contains('active')) {
             this.renderOrders();
         }
-        
+
         this.loadDashboardStats();
-        
+
         // Show notification
         this.showNotification('New order received!', 'success');
     }

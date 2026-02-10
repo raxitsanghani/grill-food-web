@@ -184,22 +184,68 @@ class AddItemsPage {
         });
     }
 
-    resizeImage(dataUrl, maxWidth, maxHeight, callback) {
+    resizeImage(dataUrl, maxWidth, maxHeight) {
         return new Promise((resolve, reject) => {
             const img = new Image();
+            
             img.onload = () => {
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                
-                canvas.width = maxWidth;
-                canvas.height = maxHeight;
-                
-                ctx.drawImage(img, 0, 0, maxWidth, maxHeight);
-                
-                const resizedDataUrl = canvas.toDataURL('image/jpeg', 0.8);
-                resolve(resizedDataUrl);
+                try {
+                    // Calculate aspect ratio
+                    const aspectRatio = img.width / img.height;
+                    let width = maxWidth;
+                    let height = maxHeight;
+                    
+                    // Maintain aspect ratio
+                    if (img.width > img.height) {
+                        height = width / aspectRatio;
+                    } else {
+                        width = height * aspectRatio;
+                    }
+                    
+                    // Ensure dimensions don't exceed max
+                    if (width > maxWidth) {
+                        width = maxWidth;
+                        height = width / aspectRatio;
+                    }
+                    if (height > maxHeight) {
+                        height = maxHeight;
+                        width = height * aspectRatio;
+                    }
+                    
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    
+                    canvas.width = width;
+                    canvas.height = height;
+                    
+                    // Use better image smoothing
+                    ctx.imageSmoothingEnabled = true;
+                    ctx.imageSmoothingQuality = 'high';
+                    
+                    // Draw image with proper aspect ratio
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    // Determine output format based on input
+                    let outputFormat = 'image/jpeg';
+                    let quality = 0.85;
+                    
+                    // Try to preserve original format if possible
+                    if (dataUrl.startsWith('data:image/png')) {
+                        outputFormat = 'image/png';
+                        quality = undefined; // PNG doesn't support quality
+                    } else if (dataUrl.startsWith('data:image/webp')) {
+                        outputFormat = 'image/webp';
+                    }
+                    
+                    // Convert to base64
+                    const resizedDataUrl = canvas.toDataURL(outputFormat, quality);
+                    resolve(resizedDataUrl);
+                } catch (error) {
+                    reject(new Error('Failed to process image: ' + error.message));
+                }
             };
-            img.onerror = () => reject(new Error('Failed to load image'));
+            
+            img.onerror = () => reject(new Error('Failed to load image. Please ensure the file is a valid image.'));
             img.src = dataUrl;
         });
     }

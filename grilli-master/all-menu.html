@@ -553,6 +553,8 @@
     - custom js link
   -->
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <!-- Utility functions - must load first -->
+  <script src="./assets/js/utils.js"></script>
   <script src="./assets/js/script.js"></script>
 
   <!-- 
@@ -595,17 +597,26 @@
           const response = await fetch(`${this.apiBaseUrl}/menu-items`);
           if (response.ok) {
             const items = await response.json();
-            this.menuItems = this.dedupeItems(items);
+            // Use deduplication utility if available
+            if (window.DeduplicationUtil) {
+              this.menuItems = window.DeduplicationUtil.dedupeMenuItems(items);
+            } else {
+              this.menuItems = this.dedupeItems(items);
+            }
             this.filteredItems = [...this.menuItems];
             this.displayMenuItems();
             this.updateStats();
           } else {
-            console.error('Failed to load menu items');
-            this.showMessage('Failed to load menu items', 'error');
+            const errorMessage = window.ErrorHandler ? 
+              window.ErrorHandler.handleError(new Error('Failed to load menu items'), 'Menu Loading') :
+              'Failed to load menu items';
+            this.showMessage(errorMessage, 'error');
           }
         } catch (error) {
-          console.error('Error loading menu items:', error);
-          this.showMessage('Error loading menu items', 'error');
+          const errorMessage = window.ErrorHandler ? 
+            window.ErrorHandler.handleError(error, 'Menu Loading') :
+            'Error loading menu items';
+          this.showMessage(errorMessage, 'error');
         }
       }
 
@@ -624,7 +635,10 @@
         loadingMessage.style.display = 'none';
         noItemsMessage.style.display = 'none';
 
-        const itemsToRender = this.dedupeItems(this.filteredItems);
+        // Use deduplication utility if available
+        const itemsToRender = window.DeduplicationUtil ? 
+          window.DeduplicationUtil.dedupeMenuItems(this.filteredItems) :
+          this.dedupeItems(this.filteredItems);
         menuGrid.innerHTML = itemsToRender.map(item => `
           <div class="all-menu-card" data-item-id="${item._id}" data-category="${item.category}" data-type="${item.type}">
             <img src="${item.image}" alt="${item.name}" onerror="this.src='./assets/images/menu-1.png'">
@@ -685,7 +699,10 @@
       }
 
       updateStats() {
-        const uniqueItems = this.dedupeItems(this.menuItems);
+        // Use deduplication utility if available
+        const uniqueItems = window.DeduplicationUtil ? 
+          window.DeduplicationUtil.dedupeMenuItems(this.menuItems) :
+          this.dedupeItems(this.menuItems);
         const totalItems = uniqueItems.length;
         const vegItems = uniqueItems.filter(item => item.type === 'veg').length;
         const nonVegItems = uniqueItems.filter(item => item.type === 'non-veg').length;

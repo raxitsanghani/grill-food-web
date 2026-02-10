@@ -169,9 +169,33 @@ ion-icon:hover {
 :root {
 
   /**
-   * COLORS
+   * DESIGN SYSTEM COLORS
    */
 
+  /* Primary Colors */
+  --color-primary: #FFD700; /* Gold - Primary accent */
+  --color-primary-dark: #d4af37;
+  --color-primary-light: #ffed4e;
+  
+  /* Background Colors */
+  --color-bg-primary: #0A0A0F; /* Main dark background */
+  --color-bg-secondary: #1A1A2E; /* Secondary dark background */
+  --color-bg-tertiary: #16213e;
+  --color-bg-card: #1a1a1a;
+  --color-bg-overlay: rgba(0, 0, 0, 0.8);
+  
+  /* Text Colors */
+  --color-text-primary: #FFFFFF; /* Primary text */
+  --color-text-secondary: #CCCCCC; /* Secondary text */
+  --color-text-muted: #999999;
+  
+  /* Status Colors */
+  --color-success: #4CAF50; /* Success messages */
+  --color-error: #F44336; /* Error messages */
+  --color-warning: #FF9800; /* Warning messages */
+  --color-info: #2196F3; /* Info messages */
+  
+  /* Legacy Colors (for backward compatibility) */
   --gold-crayola: hsl(38, 61%, 73%);
   --quick-silver: hsla(0, 0%, 65%, 1);
   --davys-grey: hsla(30, 3%, 34%, 1);
@@ -188,6 +212,15 @@ ion-icon:hover {
   --black: hsla(0, 0%, 0%, 1);
   --black-alpha-80: hsla(0, 0%, 0%, 0.8);
   --black-alpha-15: hsla(0, 0%, 0%, 0.15);
+  
+  /* Spacing System */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-2xl: 48px;
+  --spacing-3xl: 64px;
 
   /**
    * GRADIENT COLOR
@@ -320,6 +353,59 @@ select,
 textarea {
   width: 100%;
   outline: none;
+}
+
+/* Glassy login modal like Admin Web */
+.modal { background: rgba(0,0,0,0.35); backdrop-filter: blur(18px); }
+.modal .glass-login {
+  background: linear-gradient(135deg, rgba(20,20,35,0.25) 0%, rgba(15,15,25,0.35) 100%);
+  border: 1.5px solid rgba(212,175,55,0.45);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: 0 25px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(212,175,55,0.35) inset;
+}
+
+.login-form .form-group input,
+.login-form .form-group textarea,
+.login-form .form-group select,
+.signup-form .form-group input,
+.signup-form .form-group textarea,
+.signup-form .form-group select,
+.signup-form .password-input-wrapper input {
+  padding: 14px;
+  border-radius: 12px;
+  border: 2px solid rgba(212,175,55,0.35);
+  background: rgba(20,20,35,0.22);
+  color: #fff;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: inset 0 2px 6px rgba(0,0,0,0.35);
+  caret-color: #fff;
+  color-scheme: dark;
+}
+
+.login-form .form-group input:focus,
+.signup-form .form-group input:focus,
+.signup-form .password-input-wrapper input:focus {
+  outline: none;
+  border-color: #FFD700;
+  box-shadow: 0 0 0 3px rgba(212,175,55,0.2), inset 0 2px 4px rgba(0,0,0,0.2);
+  background: rgba(20,20,35,0.26);
+}
+
+.login-form .form-group input::placeholder,
+.signup-form .form-group input::placeholder,
+.signup-form .password-input-wrapper input::placeholder { color: rgba(255,255,255,0.7); }
+
+.login-form input:-webkit-autofill,
+.login-form input:-webkit-autofill:hover,
+.login-form input:-webkit-autofill:focus,
+.signup-form input:-webkit-autofill,
+.signup-form input:-webkit-autofill:hover,
+.signup-form input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #fff;
+  box-shadow: 0 0 0px 1000px rgba(20,20,35,0.22) inset;
+  transition: background-color 9999s ease-in-out 0s;
 }
 
 button { cursor: pointer; }
@@ -674,66 +760,252 @@ body.nav-active { overflow: hidden; }
 
 
 /*-----------------------------------*\
-  #PRELOAD
+  #UNIFIED LOADING SCREEN
 \*-----------------------------------*/
 
+/* Main Loading Screen - Glass Morphism Design */
 .preload {
   position: fixed;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: var(--gold-crayola);
-  z-index: 10;
-  display: grid;
-  place-content: center;
-  justify-items: center;
-  transition: var(--transition-2);
+  width: 100%;
+  height: 100vh;
+  background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 50%, #16213e 100%);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
 }
 
-.preload > * { transition: var(--transition-1); }
+/* Animated Background Particles */
+.preload::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    radial-gradient(circle at 20% 20%, rgba(212, 175, 55, 0.4) 0%, transparent 60%),
+    radial-gradient(circle at 80% 80%, rgba(139, 21, 56, 0.35) 0%, transparent 60%),
+    radial-gradient(circle at 40% 60%, rgba(212, 175, 55, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 60% 30%, rgba(212, 175, 55, 0.25) 0%, transparent 45%);
+  animation: backgroundFloat 15s ease-in-out infinite;
+  z-index: 0;
+}
 
-.preload.loaded > * { opacity: 0; }
+@keyframes backgroundFloat {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  33% { transform: translateY(-30px) rotate(1deg); }
+  66% { transform: translateY(15px) rotate(-1deg); }
+}
+
+/* Loading Content Container */
+.preload .loading-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  background: linear-gradient(135deg, rgba(20, 20, 35, 0.25) 0%, rgba(15, 15, 25, 0.35) 100%);
+  padding: 4rem 3rem;
+  border-radius: 30px;
+  border: 1.5px solid rgba(212, 175, 55, 0.45);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: 
+    0 25px 60px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(212, 175, 55, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  animation: loadingPulse 4s ease-in-out infinite;
+  max-width: 400px;
+  width: 90%;
+}
+
+@keyframes loadingPulse {
+  0%, 100% {
+    box-shadow: 
+      0 25px 50px rgba(0, 0, 0, 0.6),
+      0 0 0 1px rgba(212, 175, 55, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+  50% {
+    box-shadow: 
+      0 25px 50px rgba(0, 0, 0, 0.6),
+      0 0 0 1px rgba(212, 175, 55, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  }
+}
+
+/* Logo Section */
+.preload .loading-logo {
+  margin-bottom: 2rem;
+  animation: logoFloat 3s ease-in-out infinite;
+}
+
+.preload .loading-logo img {
+  width: 160px;
+  height: 50px;
+  filter: brightness(0) saturate(100%) invert(83%) sepia(31%) saturate(638%) hue-rotate(359deg) brightness(103%) contrast(107%);
+  transition: all 0.3s ease;
+}
+
+@keyframes logoFloat {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+/* Loading Text */
+.preload .text {
+  font-family: var(--fontFamily-forum);
+  font-size: 3rem;
+  font-weight: bold;
+  color: var(--gold-crayola);
+  margin-bottom: 2rem;
+  text-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
+  animation: textGlow 2s ease-in-out infinite alternate;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+}
+
+@keyframes textGlow {
+  from {
+    text-shadow: 0 0 5px var(--gold-crayola), 0 0 10px var(--gold-crayola), 0 0 15px var(--gold-crayola);
+  }
+  to {
+    text-shadow: 0 0 10px var(--gold-crayola), 0 0 20px var(--gold-crayola), 0 0 30px var(--gold-crayola);
+  }
+}
+
+/* Modern Spinner */
+.preload .circle {
+  width: 60px;
+  height: 60px;
+  border: 3px solid rgba(212, 175, 55, 0.3);
+  border-top: 3px solid var(--gold-crayola);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1.5rem;
+  position: relative;
+}
+
+.preload .circle::before {
+  content: '';
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  right: -3px;
+  bottom: -3px;
+  border: 3px solid transparent;
+  border-top: 3px solid rgba(212, 175, 55, 0.1);
+  border-radius: 50%;
+  animation: spin 2s linear infinite reverse;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Loading Dots */
+.preload .loading-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 1rem;
+}
+
+.preload .loading-dots .dot {
+  width: 8px;
+  height: 8px;
+  background: var(--gold-crayola);
+  border-radius: 50%;
+  animation: dotPulse 1.4s ease-in-out infinite both;
+}
+
+.preload .loading-dots .dot:nth-child(1) { animation-delay: -0.32s; }
+.preload .loading-dots .dot:nth-child(2) { animation-delay: -0.16s; }
+.preload .loading-dots .dot:nth-child(3) { animation-delay: 0s; }
+
+@keyframes dotPulse {
+  0%, 80%, 100% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+}
+
+/* Loading Progress Bar */
+.preload .loading-progress {
+  width: 100%;
+  height: 3px;
+  background: rgba(212, 175, 55, 0.2);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 1.5rem;
+}
+
+.preload .loading-progress .progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold-crayola), #ffed4e, var(--gold-crayola));
+  border-radius: 2px;
+  animation: progressLoad 3s ease-in-out infinite;
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+}
+
+@keyframes progressLoad {
+  0% { width: 0%; }
+  50% { width: 70%; }
+  100% { width: 100%; }
+}
+
+/* Loading States */
+.preload > * { transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+
+.preload.loaded > * { 
+  opacity: 0; 
+  transform: translateY(-20px);
+}
 
 .preload.loaded {
-  transition-delay: 250ms;
-  transform: translateY(100%);
+  transform: translateY(-100%);
+  transition-delay: 0.3s;
 }
 
-.circle {
-  width: 112px;
-  height: 112px;
-  border-radius: var(--radius-circle);
-  border: 3px solid var(--white);
-  border-block-start-color: var(--smoky-black-3);
-  margin-block-end: 45px;
-  animation: rotate360 1s linear infinite;
+/* Responsive Design */
+@media (max-width: 768px) {
+  .preload .loading-content {
+    padding: 3rem 2rem;
+    margin: 0 1rem;
+  }
+  
+  .preload .text {
+    font-size: 2.5rem;
+  }
+  
+  .preload .loading-logo img {
+    width: 140px;
+    height: 44px;
+  }
 }
 
-@keyframes rotate360 {
-  0% { transform: rotate(0); }
-  100% { transform: rotate(1turn); }
-}
-
-.preload .text {
-  background-image: var(--loading-text-gradient);
-  background-size: 500%;
-  font-size: calc(2rem + 3vw);
-  font-weight: var(--weight-bold);
-  line-height: 1em;
-  text-transform: uppercase;
-  letter-spacing: 16px;
-  padding-inline-start: 16px;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-stroke: 0.5px var(--eerie-black-3);
-  animation: loadingText linear 2s infinite;
-}
-
-@keyframes loadingText {
-  0% { background-position: 100%; }
-  100% { background-position: 0%; }
+@media (max-width: 480px) {
+  .preload .loading-content {
+    padding: 2.5rem 1.5rem;
+  }
+  
+  .preload .text {
+    font-size: 2rem;
+    letter-spacing: 2px;
+  }
+  
+  .preload .loading-logo img {
+    width: 120px;
+    height: 38px;
+  }
 }
 
 

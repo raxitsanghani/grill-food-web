@@ -36,10 +36,20 @@ class LoginSystem {
 
         const signupForm = document.getElementById('signupForm');
         if (signupForm) {
+            // Setup real-time validation
+            if (window.FormValidator) {
+                window.FormValidator.setupRealTimeValidation(signupForm);
+            }
+            
             signupForm.addEventListener('submit', (e) => {
                 e.preventDefault();
                 this.handleSignup();
             });
+        }
+        
+        // Setup real-time validation for login form
+        if (loginForm && window.FormValidator) {
+            window.FormValidator.setupRealTimeValidation(loginForm);
         }
 
         // User logout button
@@ -50,7 +60,7 @@ class LoginSystem {
 
         // Close modals when clicking outside
         document.addEventListener('click', (e) => {
-            if (e.target.classList.contains('modal')) {
+            if (e.target.classList.contains('modal-backdrop') || e.target.classList.contains('modern-modal')) {
                 this.hideLogin();
                 this.hideSignup();
             }
@@ -76,9 +86,14 @@ class LoginSystem {
                 this.updateUIAfterLogin();
                 
                 // Also update topbar contact info when restoring from localStorage
-                this.updateTopbarContactInfo();
+                // Use setTimeout to ensure DOM is ready
+                setTimeout(() => {
+                    this.updateTopbarContactInfo();
+                }, 200);
             } catch (error) {
-                console.error('Error parsing saved user data:', error);
+                if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                    console.error('Error parsing saved user data:', error);
+                }
                 this.clearUserData();
                 // Ensure contact info is hidden when there's an error
                 this.resetTopbarContactInfo();
@@ -93,7 +108,10 @@ class LoginSystem {
         const loginModal = document.getElementById('loginModal');
         if (loginModal) {
             loginModal.classList.add('active');
-            document.getElementById('loginEmail').focus();
+            document.body.style.overflow = 'hidden';
+            setTimeout(() => {
+                document.getElementById('loginEmail').focus();
+            }, 400);
         }
     }
 
@@ -101,6 +119,7 @@ class LoginSystem {
         const loginModal = document.getElementById('loginModal');
         if (loginModal) {
             loginModal.classList.remove('active');
+            document.body.style.overflow = '';
             document.getElementById('loginForm').reset();
             this.hideError('loginError');
         }
@@ -111,7 +130,10 @@ class LoginSystem {
         const signupModal = document.getElementById('signupModal');
         if (signupModal) {
             signupModal.classList.add('active');
-            document.getElementById('signupFullName').focus();
+            document.body.style.overflow = 'hidden';
+            setTimeout(() => {
+                document.getElementById('signupFullName').focus();
+            }, 400);
         }
     }
 
@@ -119,6 +141,7 @@ class LoginSystem {
         const signupModal = document.getElementById('signupModal');
         if (signupModal) {
             signupModal.classList.remove('active');
+            document.body.style.overflow = '';
             document.getElementById('signupForm').reset();
             this.hideError('signupError');
         }
@@ -161,24 +184,10 @@ class LoginSystem {
                 this.showError('loginError', data.error || 'Login failed');
             }
         } catch (error) {
-            console.error('Error during login:', error);
-            
-            // Fallback for testing when API is not available
-            console.log('API not available, using fallback login for testing');
-            this.currentUser = {
-                fullName: 'Test User',
-                email: email,
-                phone: '+91 9876543210' // Fallback phone number for testing
-            };
-            this.userToken = 'test-token-' + Date.now();
-            
-            // Save to localStorage
-            localStorage.setItem('userToken', this.userToken);
-            localStorage.setItem('userData', JSON.stringify(this.currentUser));
-            
-            this.showNotification('Login successful! (Test Mode)');
-            this.hideLogin();
-            this.updateUIAfterLogin();
+            const errorMessage = window.ErrorHandler ? 
+                window.ErrorHandler.handleError(error, 'Login') :
+                'Network error. Please check your connection and try again.';
+            this.showError('loginError', errorMessage);
         }
     }
 
@@ -290,54 +299,35 @@ class LoginSystem {
     updateUserSpecificContent() {
         // Update page title or other elements to show user is logged in
         if (this.currentUser) {
-            // You can add more user-specific updates here
-            console.log(`User ${this.currentUser.fullName} is now logged in`);
-            
             // Update topbar contact information with user's details
-            this.updateTopbarContactInfo();
+            // Use setTimeout to ensure DOM elements are available
+            setTimeout(() => {
+                this.updateTopbarContactInfo();
+            }, 100);
         }
     }
     
     updateTopbarContactInfo() {
-        if (this.currentUser) {
-            console.log('🔍 Updating topbar contact info for user:', this.currentUser);
-            
+        if (!this.currentUser) return;
+
+        // Use requestAnimationFrame to ensure DOM is ready
+        requestAnimationFrame(() => {
             // Show phone contact
             const phoneElement = document.getElementById('phoneNumber');
             const phoneLink = document.getElementById('topbarPhone');
             const phoneSeparator = document.getElementById('phoneSeparator');
             
-            console.log('📱 Phone elements found:', {
-                phoneElement: !!phoneElement,
-                phoneLink: !!phoneLink,
-                phoneSeparator: !!phoneSeparator,
-                userPhone: this.currentUser.phone,
-                userPhoneType: typeof this.currentUser.phone
-            });
-            
             if (phoneElement && this.currentUser.phone) {
                 phoneElement.textContent = this.currentUser.phone;
-                console.log('✅ Phone number set to:', this.currentUser.phone);
-            } else {
-                console.log('❌ Phone element or phone number missing:', {
-                    phoneElement: !!phoneElement,
-                    userPhone: this.currentUser.phone
-                });
             }
             
             if (phoneLink && this.currentUser.phone) {
                 phoneLink.href = `tel:${this.currentUser.phone}`;
                 phoneLink.style.display = 'flex';
-                console.log('✅ Phone link displayed and href set');
-            } else {
-                console.log('❌ Phone link missing or phone number missing');
             }
             
             if (phoneSeparator) {
                 phoneSeparator.style.display = 'block';
-                console.log('✅ Phone separator displayed');
-            } else {
-                console.log('❌ Phone separator missing');
             }
             
             // Show email contact
@@ -345,31 +335,19 @@ class LoginSystem {
             const emailLink = document.getElementById('topbarEmail');
             const emailSeparator = document.getElementById('emailSeparator');
             
-            console.log('📧 Email elements found:', {
-                emailElement: !!emailElement,
-                emailLink: !!emailLink,
-                emailSeparator: !!emailSeparator,
-                userEmail: this.currentUser.email
-            });
-            
             if (emailElement && this.currentUser.email) {
                 emailElement.textContent = this.currentUser.email;
-                console.log('✅ Email set to:', this.currentUser.email);
             }
             
             if (emailLink && this.currentUser.email) {
                 emailLink.href = `mailto:${this.currentUser.email}`;
                 emailLink.style.display = 'flex';
-                console.log('✅ Email link displayed and href set');
             }
             
             if (emailSeparator) {
                 emailSeparator.style.display = 'block';
-                console.log('✅ Email separator displayed');
             }
-        } else {
-            console.log('❌ No current user found for updating topbar contact info');
-        }
+        });
     }
 
     resetUserSpecificContent() {

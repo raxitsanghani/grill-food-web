@@ -7,6 +7,7 @@ class LocalDatabase {
         this.menuItemsPath = path.join(this.dbPath, 'menu-items.json');
         this.ordersPath = path.join(this.dbPath, 'orders.json');
         this.adminsPath = path.join(this.dbPath, 'admins.json');
+        this.messagesPath = path.join(this.dbPath, 'messages.json');
         
         this.ensureDataDirectory();
         this.initializeDefaultData();
@@ -112,6 +113,11 @@ class LocalDatabase {
         // Initialize empty admins array
         if (!fs.existsSync(this.adminsPath)) {
             this.writeFile(this.adminsPath, []);
+        }
+
+        // Initialize empty messages array
+        if (!fs.existsSync(this.messagesPath)) {
+            this.writeFile(this.messagesPath, []);
         }
     }
 
@@ -376,6 +382,89 @@ class LocalDatabase {
             console.error('Error getting user orders:', error);
             return [];
         }
+    }
+
+    // Messages
+    getAllMessages() {
+        return this.readFile(this.messagesPath);
+    }
+
+    createMessage(messageData) {
+        const messages = this.readFile(this.messagesPath);
+        const newMessage = {
+            _id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            customerId: messageData.customerId,
+            orderId: messageData.orderId || null,
+            content: messageData.content,
+            sender: messageData.sender || 'customer',
+            type: messageData.type || 'text',
+            imageUrl: messageData.imageUrl || null,
+            timestamp: messageData.timestamp || new Date().toISOString(),
+            readStatus: messageData.readStatus || false,
+            createdAt: new Date().toISOString()
+        };
+        messages.push(newMessage);
+        this.writeFile(this.messagesPath, messages);
+        return newMessage;
+    }
+
+    getMessagesByCustomerId(customerId) {
+        const messages = this.readFile(this.messagesPath);
+        return messages
+            .filter(msg => msg.customerId === customerId)
+            .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+    }
+
+    markMessagesAsRead(customerId) {
+        const messages = this.readFile(this.messagesPath);
+        messages.forEach(msg => {
+            if (msg.customerId === customerId && msg.sender === 'customer') {
+                msg.readStatus = true;
+            }
+        });
+        this.writeFile(this.messagesPath, messages);
+        return true;
+    }
+
+    getConversations() {
+        const messages = this.readFile(this.messagesPath);
+        const conversationsMap = new Map();
+
+        messages.forEach(msg => {
+            const customerId = msg.customerId;
+            if (!conversationsMap.has(customerId)) {
+                conversationsMap.set(customerId, {
+                    customerId: customerId,
+                    orderId: msg.orderId,
+                    customerName: msg.customerName || null,
+                    lastMessage: null,
+                    unreadCount: 0,
+                    updatedAt: msg.timestamp
+                });
+            }
+
+            const conv = conversationsMap.get(customerId);
+            if (!conv.lastMessage || new Date(msg.timestamp) > new Date(conv.lastMessage.timestamp)) {
+                conv.lastMessage = msg;
+                conv.updatedAt = msg.timestamp;
+            }
+
+            if (msg.sender === 'customer' && !msg.readStatus) {
+                conv.unreadCount++;
+            }
+        });
+
+        return Array.from(conversationsMap.values())
+            .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+    }
+
+    getUnreadCount(customerId) {
+        const messages = this.readFile(this.messagesPath);
+        return messages.filter(msg => 
+            msg.customerId === customerId && 
+            msg.sender === 'customer' && 
+            !msg.readStatus
+        ).length;
     }
 }
 
